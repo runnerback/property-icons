@@ -2,6 +2,7 @@ import { App, PluginSettingTab, Setting, Notice } from 'obsidian';
 import type PropertyIconsPlugin from './main';
 import { Condition, Rule, RuleOperator } from './types';
 import { BUILTIN_ICONS, builtinSvgEl } from './icons';
+import { t } from './i18n';
 
 const CUSTOM_ICON_MAX_BYTES = 256 * 1024; // 单张自定义图标上限 256KB（存 data.json，别撑太大）
 const ACCEPTED_EXT = ['jpg', 'jpeg', 'png', 'svg'];
@@ -24,14 +25,16 @@ export class PropertyIconsSettingTab extends PluginSettingTab {
     const { containerEl } = this;
     containerEl.empty();
 
+    const L = t();
+
     new Setting(containerEl)
-      .setName('规则组 → 文件树图标')
-      .setDesc('为每组规则配置若干「属性 = 值」条件（组内统一用 且/或），命中的笔记会在文件名前显示该组图标。命中多组则依次显示多个图标。')
+      .setName(L.heading)
+      .setDesc(L.headingDesc)
       .setHeading();
 
     new Setting(containerEl)
-      .setName('图标大小')
-      .setDesc('文件名前徽标的像素大小。')
+      .setName(L.iconSize)
+      .setDesc(L.iconSizeDesc)
       .addSlider((slider) => {
         slider
           .setLimits(12, 24, 1)
@@ -49,12 +52,12 @@ export class PropertyIconsSettingTab extends PluginSettingTab {
 
     new Setting(containerEl).addButton((btn) => {
       btn
-        .setButtonText('+ 新增规则组')
+        .setButtonText(L.addRuleGroup)
         .setCta()
         .onClick(async () => {
           const rule: Rule = {
             id: genId('rule'),
-            name: `规则 ${this.plugin.settings.rules.length + 1}`,
+            name: L.ruleDefaultName(this.plugin.settings.rules.length + 1),
             op: 'AND',
             conditions: [{ property: '', value: '' }],
             icon: `builtin:${BUILTIN_ICONS[0].id}`,
@@ -68,20 +71,21 @@ export class PropertyIconsSettingTab extends PluginSettingTab {
 
     // ── 自定义图标 ──
     new Setting(containerEl)
-      .setName('自定义图标')
-      .setDesc('上传自己的图片作为图标，支持 jpg / jpeg / png / svg（单张 ≤ 256KB）。')
+      .setName(L.customIcons)
+      .setDesc(L.customIconsDesc)
       .setHeading();
 
     this.renderCustomIcons(containerEl);
   }
 
   private renderRuleCard(parent: HTMLElement, rule: Rule): void {
+    const L = t();
     const card = parent.createDiv({ cls: 'property-icons-rule-card' });
 
     // 顶行：名称 + 启用 + 删除
     const head = new Setting(card)
-      .addText((t) => {
-        t.setPlaceholder('规则名称')
+      .addText((txt) => {
+        txt.setPlaceholder(L.ruleNamePlaceholder)
           .setValue(rule.name)
           .onChange(async (v) => {
             rule.name = v;
@@ -89,7 +93,7 @@ export class PropertyIconsSettingTab extends PluginSettingTab {
           });
       })
       .addToggle((tg) => {
-        tg.setTooltip('启用该规则')
+        tg.setTooltip(L.enableRuleTooltip)
           .setValue(rule.enabled)
           .onChange(async (v) => {
             rule.enabled = v;
@@ -98,7 +102,7 @@ export class PropertyIconsSettingTab extends PluginSettingTab {
       })
       .addExtraButton((b) => {
         b.setIcon('trash')
-          .setTooltip('删除规则组')
+          .setTooltip(L.deleteRuleTooltip)
           .onClick(async () => {
             this.plugin.settings.rules = this.plugin.settings.rules.filter((r) => r.id !== rule.id);
             await this.persist();
@@ -110,10 +114,10 @@ export class PropertyIconsSettingTab extends PluginSettingTab {
 
     // 操作符：且 / 或
     new Setting(card)
-      .setName('条件组合')
+      .setName(L.conditionCombine)
       .addDropdown((dd) => {
-        dd.addOption('AND', '且（全部满足）');
-        dd.addOption('OR', '或（任一满足）');
+        dd.addOption('AND', L.opAll);
+        dd.addOption('OR', L.opAny);
         dd.setValue(rule.op);
         dd.onChange(async (v) => {
           rule.op = v as RuleOperator;
@@ -126,7 +130,7 @@ export class PropertyIconsSettingTab extends PluginSettingTab {
     rule.conditions.forEach((cond, idx) => this.renderConditionRow(condsWrap, rule, cond, idx));
 
     new Setting(card).addButton((btn) => {
-      btn.setButtonText('+ 添加条件').onClick(async () => {
+      btn.setButtonText(L.addCondition).onClick(async () => {
         rule.conditions.push({ property: '', value: '' });
         await this.persist();
         this.display();
@@ -134,18 +138,19 @@ export class PropertyIconsSettingTab extends PluginSettingTab {
     });
 
     // 图标选择
-    const iconLabel = card.createDiv({ cls: 'property-icons-icon-label', text: '图标' });
+    const iconLabel = card.createDiv({ cls: 'property-icons-icon-label', text: L.iconLabel });
     iconLabel.setAttr('aria-hidden', 'true');
     this.renderIconPicker(card, rule);
   }
 
   private renderConditionRow(parent: HTMLElement, rule: Rule, cond: Condition, idx: number): void {
+    const L = t();
     const setting = new Setting(parent);
     setting.settingEl.addClass('property-icons-cond-row');
     setting.infoEl.remove(); // 去掉左侧空 name 占位，条件行更紧凑
 
-    setting.addText((t) => {
-      t.setPlaceholder('属性名，如 publish_status')
+    setting.addText((txt) => {
+      txt.setPlaceholder(L.propertyPlaceholder)
         .setValue(cond.property)
         .onChange(async (v) => {
           cond.property = v.trim();
@@ -153,8 +158,8 @@ export class PropertyIconsSettingTab extends PluginSettingTab {
         });
     });
     setting.controlEl.createSpan({ cls: 'property-icons-eq', text: '=' });
-    setting.addText((t) => {
-      t.setPlaceholder('值，如 done')
+    setting.addText((txt) => {
+      txt.setPlaceholder(L.valuePlaceholder)
         .setValue(cond.value)
         .onChange(async (v) => {
           cond.value = v;
@@ -163,7 +168,7 @@ export class PropertyIconsSettingTab extends PluginSettingTab {
     });
     setting.addExtraButton((b) => {
       b.setIcon('x')
-        .setTooltip('删除该条件')
+        .setTooltip(L.deleteConditionTooltip)
         .onClick(async () => {
           rule.conditions.splice(idx, 1);
           if (rule.conditions.length === 0) rule.conditions.push({ property: '', value: '' });
@@ -199,8 +204,9 @@ export class PropertyIconsSettingTab extends PluginSettingTab {
   }
 
   private renderCustomIcons(containerEl: HTMLElement): void {
+    const L = t();
     // 上传按钮（隐藏的 file input）
-    const uploadSetting = new Setting(containerEl).setName('上传图标');
+    const uploadSetting = new Setting(containerEl).setName(L.uploadIcon);
     const fileInput = uploadSetting.controlEl.createEl('input', {
       attr: { type: 'file', accept: '.jpg,.jpeg,.png,.svg,image/*' },
       cls: 'property-icons-file-input',
@@ -214,7 +220,7 @@ export class PropertyIconsSettingTab extends PluginSettingTab {
     // 已上传列表
     const list = containerEl.createDiv({ cls: 'property-icons-custom-list' });
     if (this.plugin.settings.customIcons.length === 0) {
-      list.createDiv({ cls: 'property-icons-empty', text: '暂无自定义图标' });
+      list.createDiv({ cls: 'property-icons-empty', text: L.noCustomIcons });
       return;
     }
     for (const custom of this.plugin.settings.customIcons) {
@@ -223,7 +229,7 @@ export class PropertyIconsSettingTab extends PluginSettingTab {
       preview.createEl('img', { attr: { src: custom.dataUri, alt: '' } });
       row.addExtraButton((b) => {
         b.setIcon('trash')
-          .setTooltip('删除该图标')
+          .setTooltip(L.deleteIconTooltip)
           .onClick(async () => {
             this.plugin.settings.customIcons = this.plugin.settings.customIcons.filter((c) => c.id !== custom.id);
             // 用到该图标的规则回退到第一个内置图标，避免空图标
@@ -238,13 +244,14 @@ export class PropertyIconsSettingTab extends PluginSettingTab {
   }
 
   private async handleUpload(file: File): Promise<void> {
+    const L = t();
     const ext = (file.name.split('.').pop() || '').toLowerCase();
     if (!ACCEPTED_EXT.includes(ext)) {
-      new Notice(`不支持的格式：.${ext}（仅支持 ${ACCEPTED_EXT.join(' / ')}）`);
+      new Notice(L.unsupportedFormat(ext, ACCEPTED_EXT.join(' / ')));
       return;
     }
     if (file.size > CUSTOM_ICON_MAX_BYTES) {
-      new Notice(`图片过大（${(file.size / 1024).toFixed(0)}KB），上限 256KB`);
+      new Notice(L.imageTooBig(Math.round(file.size / 1024)));
       return;
     }
     const dataUri = await new Promise<string>((resolve, reject) => {
@@ -255,7 +262,7 @@ export class PropertyIconsSettingTab extends PluginSettingTab {
     }).catch(() => '');
 
     if (!dataUri) {
-      new Notice('读取图片失败');
+      new Notice(L.readImageFailed);
       return;
     }
     this.plugin.settings.customIcons.push({

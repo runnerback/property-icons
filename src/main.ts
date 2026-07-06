@@ -2,12 +2,14 @@ import { Plugin, TFile } from 'obsidian';
 import { DEFAULT_SETTINGS, PropertyIconsSettings } from './types';
 import { ExplorerDecorator } from './decorator';
 import { PropertyIconsSettingTab } from './settings';
+import { initLocale } from './i18n';
 
 export default class PropertyIconsPlugin extends Plugin {
   settings: PropertyIconsSettings = DEFAULT_SETTINGS;
   private decorator!: ExplorerDecorator;
 
   async onload(): Promise<void> {
+    initLocale();
     await this.loadSettings();
 
     this.decorator = new ExplorerDecorator(this.app, () => this.settings);
