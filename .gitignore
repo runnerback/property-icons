@@ -1,0 +1,11 @@
+# Node
+node_modules/
+npm-debug.log*
+
+# Build output is committed at release time; ignore during dev if desired
+# main.js
+*.js.map
+
+# OS / editor
+.DS_Store
+.idea/

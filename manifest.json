@@ -1,10 +1,10 @@
 {
-	"id": "explorer-property-attributes",
-	"name": "Mark as Read",
-	"version": "1.3.2",
+	"id": "property-icons",
+	"name": "Property Icons",
+	"version": "0.1.0",
 	"minAppVersion": "1.4.0",
-	"description": "Mark a note read or done with one click and see it in the file explorer: finished notes are grayed out with a checkmark. Any frontmatter property can style files via CSS snippets, updated instantly.",
-	"author": "Maksim Volkov",
-	"authorUrl": "https://github.com/hemy301",
+	"description": "Show badge icons before file names in the explorer based on note property (frontmatter) rules. Configure multiple rule groups with AND/OR conditions, each mapped to a built-in brand icon or your own uploaded image.",
+	"author": "runnerback",
+	"authorUrl": "https://github.com/runnerback/property-icons",
 	"isDesktopOnly": false
 }

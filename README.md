@@ -1,67 +1,45 @@
-# Mark as Read
+# Property Icons
 
-*(formerly Explorer Property Attributes — the plugin id is unchanged, existing installs keep updating)*
+> Show badge icons before file names in Obsidian's file explorer, driven by note **property (frontmatter) rules**.
 
-**See each note's status right in the file list — without opening anything.**
+Your notes already carry their status in properties — `publish_status: done`, `publish_platform: wechat`, `priority: high`. **Property Icons** turns those into small icons in the file list, so you can see state at a glance without opening anything.
 
-Mark a note as read, done or urgent, and the file explorer shows it instantly: gray it out, add a checkmark, a color, an emoji — whatever you choose.
+## Features
 
-And marking is one click too: an optional footer bar pins a checkbox for the property to the bottom of every note that has it, so you never scroll back to the properties panel.
+- **Rule groups** — create any number of rule groups. Each group is a set of `property = value` conditions.
+- **AND / OR per group** — choose whether *all* conditions must match (AND) or *any* (OR). One operator per group, kept simple.
+- **Multiple icons** — a file that matches several groups shows several badges, in order.
+- **Built-in brand icons** — bilibili, 小红书 (Xiaohongshu), YouTube, 抖音 (Douyin), 微博 (Weibo), WeChat, X, Instagram.
+- **Custom icons** — upload your own image (`jpg` / `jpeg` / `png` / `svg`) and use it as a badge.
+- **Live** — badges update instantly when a note's properties change, and survive file-tree scrolling/expanding.
 
-![Demo: clicking the "read" button at the bottom of a note instantly grays it out in the file explorer](demo.gif)
+## Usage
 
-## Why
+1. Enable the plugin, open **Settings → Property Icons**.
+2. Click **新增规则组 / Add rule group**.
+3. Add one or more conditions (e.g. property `publish_status`, value `done`), pick **且/或 (AND/OR)**, and choose an icon.
+4. Notes whose frontmatter matches now show the icon before their name in the file explorer.
 
-Your notes already know their status — it lives in their properties (`read: true`, `status: done`, `priority: high`). But the file explorer hides all of it: every file looks the same, and you end up opening notes just to remember where you left off.
+Example — show the WeChat icon on notes synced to a WeChat draft:
 
-This plugin brings that information into the file explorer, and keeps it in sync the moment a property changes.
-
-## Quick start: a reading tracker (the GIF above)
-
-No configuration needed — just install, enable, and:
-
-**1.** Give any one note a `read` property (a checkbox in the Properties panel). `done`, `finished`, `complete`, `archived` and `прочитано` work out of the box too, and the list is editable in the settings.
-
-**2.** That's it — for the whole vault. Every note now has a **checkbox bar pinned to the bottom of its pane** (once a done-marker property is used anywhere in the vault, it is offered in every note; the first click creates the property in that note). While the property is true, the note is **grayed out with a green ✓ in the file explorer**. Finish reading, click, done — no scrolling to the top, no per-note setup, and the explorer restyles instantly.
-
-## Custom styling with CSS snippets
-
-Every frontmatter property is also exposed as a `data-link-<name>` attribute on the note's file-explorer item, so any styling beyond the built-in graying is one CSS snippet away (Settings → Appearance → CSS snippets):
-
-```css
-/* Paint high-priority notes red and prefix them with 🔥 */
-.nav-file-title-content[data-link-priority="high"] {
-  color: var(--color-red);
-}
-
-.nav-file-title-content[data-link-priority="high"]::before {
-  content: "🔥 ";
-}
+```yaml
+---
+publish_platform: wechat
+publish_status: done
+---
 ```
 
-More ideas:
+Rule: `publish_platform = wechat` **AND** `publish_status = done` → WeChat icon.
 
-- Dim `status: someday` notes
-- Give every `type: meeting` note a 📅 icon
+## Notes on matching
 
-Any property works, any value type works (list values are joined with spaces), non-ASCII property names included. The settings let you limit which properties are exposed and which get footer toggles.
+- Conditions use **exact string equality** (`status: done` matches value `done`).
+- If a property is a list (e.g. `tags: [a, b]`), the condition matches when **any** element equals the value.
 
-## Install
+## Trademark notice
 
-**From the community catalog:** Settings → Community plugins → Browse → search for **Mark as Read**, or use [this link](https://obsidian.md/plugins?id=explorer-property-attributes).
-
-**Manually:** download `main.js`, `manifest.json` and `styles.css` from the [latest release](https://github.com/hemy301/explorer-property-attributes/releases/latest) into `<vault>/.obsidian/plugins/explorer-property-attributes/` and enable the plugin.
-
-## How it works (the technical bit)
-
-CSS alone can't see frontmatter. The plugin exposes the properties you choose as data attributes on file-explorer items — a note with `status: done` gets `data-link-status="done"` on its title element (`.nav-file-title-content`) — and your CSS snippet does the styling.
-
-The attribute format is identical to [Supercharged Links](https://github.com/mdelobelle/obsidian_supercharged_links), so CSS snippets written for it keep working unchanged. The difference: Supercharged Links repaints the explorer only when its DOM is rebuilt (e.g. collapsing a folder), so after editing a property it can show a stale value even across an app reload — this plugin updates instantly on every metadata change, and does only this one job. If you use Supercharged Links for its other features (link styling, tab headers), both can run side by side.
-
-The footer toggles write through Obsidian's own `processFrontMatter`, so the property is updated exactly as if you edited it in the properties panel — no custom syntax in your notes.
-
-Only markdown files are decorated, and the plugin cleans up after itself: attributes and footers are removed when a property is removed from settings or the plugin is disabled.
+The built-in icons are **simplified, brand-colored glyphs** created for this plugin to help you distinguish platforms at small sizes — they are **not** the official logos. All platform names and logos are trademarks of their respective owners, and their inclusion here does not imply any affiliation or endorsement. If you need an exact official logo, use the **custom icon upload** feature.
 
 ## License
 
-MIT
+[MIT](LICENSE)

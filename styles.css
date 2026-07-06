@@ -1,60 +1,125 @@
-/* Built-in styling for finished notes (the "Gray out finished notes"
-   plugin setting): grayed out with a green checkmark. */
-
-.nav-file-title.epa-done .nav-file-title-content {
-	color: var(--text-faint);
+/* ===== 文件树徽标 ===== */
+.property-icons-badges {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-right: 5px;
+  vertical-align: middle;
+  flex: 0 0 auto;
 }
 
-.nav-file-title.epa-done .nav-file-title-content::before {
-	content: '✓ ';
-	color: var(--color-green);
-	font-weight: 700;
+.property-icons-badge {
+  display: inline-flex;
+  width: var(--property-icons-size, 16px);
+  height: var(--property-icons-size, 16px);
+  line-height: 0;
 }
 
-/* Note footer toggles (the "Note footer toggles" plugin setting) */
-
-.epa-footer {
-	position: absolute;
-	bottom: 0;
-	left: 0;
-	right: 0;
-	z-index: var(--layer-cover, 5);
-	display: flex;
-	align-items: center;
-	gap: 12px;
-	padding: 8px 24px;
-	background: var(--background-primary);
-	border-top: 1px solid var(--background-modifier-border);
-	font-size: var(--font-ui-small);
+.property-icons-badge svg,
+.property-icons-badge img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 3px;
 }
 
-.epa-footer-toggle {
-	display: flex;
-	align-items: center;
-	gap: 8px;
-	padding: 5px 16px;
-	border: 1px solid var(--background-modifier-border);
-	border-radius: 999px;
-	background: var(--interactive-normal);
-	box-shadow: var(--shadow-s, none);
-	cursor: pointer;
-	color: var(--text-normal);
-	font-weight: 500;
-	user-select: none;
-	transition: background 80ms ease, border-color 80ms ease, color 80ms ease;
+/* ===== 设置页：规则组卡片 ===== */
+.property-icons-rule-card {
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 8px;
+  padding: 8px 12px 12px;
+  margin-bottom: 14px;
+  background: var(--background-secondary);
 }
 
-.epa-footer-toggle:hover {
-	background: var(--interactive-hover);
-	border-color: var(--background-modifier-border-hover);
+.property-icons-rule-head .setting-item-control {
+  gap: 6px;
 }
 
-.epa-footer-toggle:has(input:checked) {
-	color: var(--color-green);
-	border-color: var(--color-green);
+.property-icons-conditions {
+  margin: 4px 0;
 }
 
-.epa-footer-toggle input[type='checkbox'] {
-	margin: 0;
-	cursor: pointer;
+.property-icons-cond-row {
+  border: none;
+  padding: 4px 0;
+}
+
+.property-icons-cond-row .setting-item-control {
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+}
+
+.property-icons-eq {
+  opacity: 0.7;
+  padding: 0 2px;
+}
+
+.property-icons-icon-label {
+  font-size: var(--font-ui-smaller);
+  color: var(--text-muted);
+  margin: 8px 0 4px;
+}
+
+.property-icons-icon-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.property-icons-icon-option {
+  width: 30px;
+  height: 30px;
+  padding: 3px;
+  border: 2px solid transparent;
+  border-radius: 7px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--background-primary);
+  transition: border-color 0.12s ease;
+}
+
+.property-icons-icon-option:hover {
+  border-color: var(--background-modifier-border-hover);
+}
+
+.property-icons-icon-option.is-selected {
+  border-color: var(--interactive-accent);
+}
+
+.property-icons-icon-option svg,
+.property-icons-icon-option img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 3px;
+}
+
+/* ===== 设置页：自定义图标 ===== */
+.property-icons-file-input {
+  max-width: 220px;
+}
+
+.property-icons-custom-preview {
+  display: inline-flex;
+  width: 18px;
+  height: 18px;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+
+.property-icons-custom-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 3px;
+}
+
+.property-icons-empty {
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+  padding: 6px 0;
 }
