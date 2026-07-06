@@ -2,14 +2,18 @@
 .property-icons-badges {
   display: inline-flex;
   align-items: center;
+  /* .nav-file-title 是 flex 行；align-self 让徽标块与文件名文字在垂直方向居中对齐 */
+  align-self: center;
   gap: 3px;
   margin-right: 5px;
-  vertical-align: middle;
+  vertical-align: middle; /* 非 flex 父级下的兜底 */
   flex: 0 0 auto;
 }
 
 .property-icons-badge {
   display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: var(--property-icons-size, 16px);
   height: var(--property-icons-size, 16px);
   line-height: 0;
@@ -17,6 +21,8 @@
 
 .property-icons-badge svg,
 .property-icons-badge img {
+  /* block 去掉内联元素默认的 baseline 描边缝隙，避免图标整体偏上 */
+  display: block;
   width: 100%;
   height: 100%;
   object-fit: contain;

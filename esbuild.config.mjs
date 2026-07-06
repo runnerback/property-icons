@@ -28,6 +28,8 @@ const context = await esbuild.context({
   logLevel: 'info',
   sourcemap: prod ? false : 'inline',
   treeShaking: true,
+  // 把 .svg 作为文本内联进 bundle（平台品牌图标源文件放 src/icons/platform-ic-sys/）
+  loader: { '.svg': 'text' },
   outfile: 'main.js',
 });
 
