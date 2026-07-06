@@ -1,5 +1,7 @@
 # Property Icons
 
+**English** | [中文](README.zh-CN.md)
+
 > Show badge icons before file names in Obsidian's file explorer, driven by note **property (frontmatter) rules**.
 
 Your notes already carry their status in properties — `publish_status: done`, `publish_platform: wechat`, `priority: high`. **Property Icons** turns those into small icons in the file list, so you can see state at a glance without opening anything.
@@ -39,6 +41,10 @@ Rule: `publish_platform = wechat` **AND** `publish_status = done` → WeChat ico
 ## Trademark notice
 
 The built-in icons are **simplified, brand-colored glyphs** created for this plugin to help you distinguish platforms at small sizes — they are **not** the official logos. All platform names and logos are trademarks of their respective owners, and their inclusion here does not imply any affiliation or endorsement. If you need an exact official logo, use the **custom icon upload** feature.
+
+## Acknowledgements
+
+This plugin was inspired by [Mark as Read / Explorer Property Attributes](https://github.com/hemy301/explorer-property-attributes) by **Maksim Volkov ([@hemy301](https://github.com/hemy301))** — the idea of surfacing note properties directly in the file explorer comes from his work. Property Icons is an independent implementation with its own rule-group engine and icon system, but it owes the original spark to that project. Thank you.
 
 ## License
 
