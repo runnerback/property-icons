@@ -1,9 +1,14 @@
 // 数据模型：规则组 + 自定义图标。全部持久化到插件 data.json。
 
-/** 单个条件：某个属性(property) 精确等于 某个值(value)。 */
+/** 条件匹配方式：精确等于 / 包含（子串；数组属性按任一元素判断）。 */
+export type ConditionMatch = 'equals' | 'contains';
+
+/** 单个条件：某个属性(property) 按 match 方式匹配 某个值(value)。 */
 export interface Condition {
   property: string;
   value: string;
+  /** 缺省（旧数据）按 'equals' 处理，向后兼容。 */
+  match?: ConditionMatch;
 }
 
 /** 组内条件的组合方式：全 AND 或 全 OR（同一组只用一种，见需求约定）。 */

@@ -1,6 +1,6 @@
 {
   "name": "property-icons",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Obsidian plugin: badge icons in the file explorer driven by note property rules.",
   "main": "main.js",
   "scripts": {

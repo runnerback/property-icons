@@ -4,19 +4,23 @@ import { Condition, Rule } from './types';
 export type Frontmatter = Record<string, unknown> | undefined | null;
 
 /**
- * 单个条件是否命中：属性值「精确等于」目标值（按需求，只做精确等于）。
+ * 单个条件是否命中：按 cond.match 匹配（缺省 equals，旧数据兼容）。
+ * - equals：属性值「精确等于」目标值；数组属性任一元素精确等于即命中。
+ * - contains：属性值「包含」目标子串；数组属性任一元素包含即命中。
  * - 值统一转成字符串比较，所以 status: done 与 "done" 都能匹配。
- * - 数组属性（如 tags: [a, b]）：任一元素等于目标值即命中。
  */
 export function conditionMatches(fm: Frontmatter, cond: Condition): boolean {
   if (!fm || !cond.property) return false;
   const raw = fm[cond.property];
   if (raw === undefined || raw === null) return false;
   const target = cond.value;
+  const hit = cond.match === 'contains'
+    ? (value: unknown) => target !== '' && String(value).includes(target)
+    : (value: unknown) => String(value) === target;
   if (Array.isArray(raw)) {
-    return raw.some((item) => String(item) === target);
+    return raw.some(hit);
   }
-  return String(raw) === target;
+  return hit(raw);
 }
 
 /**

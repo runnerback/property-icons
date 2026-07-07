@@ -163,7 +163,17 @@ export class PropertyIconsSettingTab extends PluginSettingTab {
           await this.persist();
         });
     });
-    setting.controlEl.createSpan({ cls: 'property-icons-eq', text: '=' });
+    // 匹配方式：=（精确等于）/ 包含（子串；数组属性按任一元素判断）
+    setting.addDropdown((dd) => {
+      dd.addOption('equals', L.matchEquals);
+      dd.addOption('contains', L.matchContains);
+      dd.setValue(cond.match === 'contains' ? 'contains' : 'equals');
+      dd.selectEl.setAttribute('aria-label', L.matchTooltip);
+      dd.onChange(async (v) => {
+        cond.match = v === 'contains' ? 'contains' : 'equals';
+        await this.persist();
+      });
+    });
     setting.addText((txt) => {
       txt.setPlaceholder(L.valuePlaceholder)
         .setValue(cond.value)

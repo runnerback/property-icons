@@ -42,10 +42,11 @@ function conditionMatches(fm, cond) {
   if (raw === void 0 || raw === null)
     return false;
   const target = cond.value;
+  const hit = cond.match === "contains" ? (value) => target !== "" && String(value).includes(target) : (value) => String(value) === target;
   if (Array.isArray(raw)) {
-    return raw.some((item) => String(item) === target);
+    return raw.some(hit);
   }
-  return String(raw) === target;
+  return hit(raw);
 }
 function ruleMatches(fm, rule) {
   if (!rule.enabled)
@@ -263,6 +264,9 @@ var en = {
   iconLabel: "Icon",
   propertyPlaceholder: "Property, e.g. publish_status",
   valuePlaceholder: "Value, e.g. done",
+  matchEquals: "=",
+  matchContains: "contains",
+  matchTooltip: "Match mode: exact equals or substring contains (arrays match by any element)",
   deleteConditionTooltip: "Delete this condition",
   customIcons: "Custom icons",
   customIconsDesc: "Upload your own image as an icon. Supports jpg / jpeg / png / svg (\u2264 256KB each).",
@@ -292,6 +296,9 @@ var zh = {
   iconLabel: "\u56FE\u6807",
   propertyPlaceholder: "\u5C5E\u6027\u540D\uFF0C\u5982 publish_status",
   valuePlaceholder: "\u503C\uFF0C\u5982 done",
+  matchEquals: "=",
+  matchContains: "\u5305\u542B",
+  matchTooltip: "\u5339\u914D\u65B9\u5F0F\uFF1A\u7CBE\u786E\u7B49\u4E8E \u6216 \u5305\u542B\u5B50\u4E32\uFF08\u6570\u7EC4\u5C5E\u6027\u6309\u4EFB\u4E00\u5143\u7D20\u5224\u65AD\uFF09",
   deleteConditionTooltip: "\u5220\u9664\u8BE5\u6761\u4EF6",
   customIcons: "\u81EA\u5B9A\u4E49\u56FE\u6807",
   customIconsDesc: "\u4E0A\u4F20\u81EA\u5DF1\u7684\u56FE\u7247\u4F5C\u4E3A\u56FE\u6807\uFF0C\u652F\u6301 jpg / jpeg / png / svg\uFF08\u5355\u5F20 \u2264 256KB\uFF09\u3002",
@@ -427,7 +434,16 @@ var PropertyIconsSettingTab = class extends import_obsidian3.PluginSettingTab {
         await this.persist();
       });
     });
-    setting.controlEl.createSpan({ cls: "property-icons-eq", text: "=" });
+    setting.addDropdown((dd) => {
+      dd.addOption("equals", L.matchEquals);
+      dd.addOption("contains", L.matchContains);
+      dd.setValue(cond.match === "contains" ? "contains" : "equals");
+      dd.selectEl.setAttribute("aria-label", L.matchTooltip);
+      dd.onChange(async (v) => {
+        cond.match = v === "contains" ? "contains" : "equals";
+        await this.persist();
+      });
+    });
     setting.addText((txt) => {
       txt.setPlaceholder(L.valuePlaceholder).setValue(cond.value).onChange(async (v) => {
         cond.value = v;

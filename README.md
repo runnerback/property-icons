@@ -10,7 +10,7 @@ Your notes already carry their status in properties — `publish_status: done`, 
 
 ## Features
 
-- **Rule groups** — create any number of rule groups. Each group is a set of `property = value` conditions.
+- **Rule groups** — create any number of rule groups. Each group is a set of `property = value` (exact) or `property contains value` (substring; arrays match by any element) conditions.
 - **AND / OR per group** — choose whether *all* conditions must match (AND) or *any* (OR). One operator per group, kept simple.
 - **Multiple icons** — a file that matches several groups shows several badges, in order.
 - **Built-in brand icons** — bilibili, 小红书 (Xiaohongshu), YouTube, 抖音 (Douyin), 微博 (Weibo), WeChat, X, Instagram.

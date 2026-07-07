@@ -17,6 +17,9 @@ export interface Messages {
   iconLabel: string;
   propertyPlaceholder: string;
   valuePlaceholder: string;
+  matchEquals: string;
+  matchContains: string;
+  matchTooltip: string;
   deleteConditionTooltip: string;
   customIcons: string;
   customIconsDesc: string;
@@ -46,6 +49,9 @@ export const en: Messages = {
   iconLabel: 'Icon',
   propertyPlaceholder: 'Property, e.g. publish_status',
   valuePlaceholder: 'Value, e.g. done',
+  matchEquals: '=',
+  matchContains: 'contains',
+  matchTooltip: 'Match mode: exact equals or substring contains (arrays match by any element)',
   deleteConditionTooltip: 'Delete this condition',
   customIcons: 'Custom icons',
   customIconsDesc: 'Upload your own image as an icon. Supports jpg / jpeg / png / svg (≤ 256KB each).',
