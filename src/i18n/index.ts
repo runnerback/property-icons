@@ -1,8 +1,9 @@
 // 语言检测 + 取词。默认英文；检测到中文界面自动切中文。
 //
-// Obsidian 把界面语言存在 localStorage 的 'language' 键（简体中文 = 'zh'，
-// 繁体 = 'zh-TW'，英文默认时可能为空）。切语言需重开 Obsidian，故加载时判定一次即可。
+// 用 Obsidian 导出的 moment 读界面语言（简体中文 = 'zh-cn'，繁体 = 'zh-tw'，
+// 英文 = 'en'），走官方 API 而非浏览器本地存储。切语言需重开 Obsidian，故加载时判定一次即可。
 
+import { moment } from 'obsidian';
 import { en, Messages } from './en';
 import { zh } from './zh';
 
@@ -10,7 +11,7 @@ let current: Messages = en;
 
 function detectLang(): string {
   try {
-    return (window.localStorage.getItem('language') || 'en').toLowerCase();
+    return (moment.locale() || 'en').toLowerCase();
   } catch {
     return 'en';
   }

@@ -10,7 +10,7 @@ export type Frontmatter = Record<string, unknown> | undefined | null;
  */
 export function conditionMatches(fm: Frontmatter, cond: Condition): boolean {
   if (!fm || !cond.property) return false;
-  const raw = (fm as Record<string, unknown>)[cond.property];
+  const raw = fm[cond.property];
   if (raw === undefined || raw === null) return false;
   const target = cond.value;
   if (Array.isArray(raw)) {

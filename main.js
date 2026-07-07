@@ -22,7 +22,7 @@ __export(main_exports, {
   default: () => PropertyIconsPlugin
 });
 module.exports = __toCommonJS(main_exports);
-var import_obsidian3 = require("obsidian");
+var import_obsidian4 = require("obsidian");
 
 // src/types.ts
 var DEFAULT_SETTINGS = {
@@ -140,7 +140,7 @@ var ExplorerDecorator = class {
       const svgEl = builtinSvgEl(id);
       if (!icon || !svgEl)
         return null;
-      badge.appendChild(document.importNode(svgEl, true));
+      badge.appendChild(activeDocument.importNode(svgEl, true));
       badge.setAttribute("aria-label", icon.label);
       return badge;
     }
@@ -235,11 +235,14 @@ var ExplorerDecorator = class {
       window.clearTimeout(this.debounceTimer);
       this.debounceTimer = null;
     }
-    document.querySelectorAll("." + BADGE_CONTAINER_CLASS).forEach((n) => n.remove());
+    activeDocument.querySelectorAll("." + BADGE_CONTAINER_CLASS).forEach((n) => n.remove());
   }
 };
 
 // src/settings.ts
+var import_obsidian3 = require("obsidian");
+
+// src/i18n/index.ts
 var import_obsidian2 = require("obsidian");
 
 // src/i18n/en.ts
@@ -304,7 +307,7 @@ var zh = {
 var current = en;
 function detectLang() {
   try {
-    return (window.localStorage.getItem("language") || "en").toLowerCase();
+    return (import_obsidian2.moment.locale() || "en").toLowerCase();
   } catch (e) {
     return "en";
   }
@@ -323,7 +326,7 @@ var ACCEPTED_EXT = ["jpg", "jpeg", "png", "svg"];
 function genId(prefix) {
   return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
 }
-var PropertyIconsSettingTab = class extends import_obsidian2.PluginSettingTab {
+var PropertyIconsSettingTab = class extends import_obsidian3.PluginSettingTab {
   constructor(app, plugin) {
     super(app, plugin);
     this.plugin = plugin;
@@ -332,20 +335,26 @@ var PropertyIconsSettingTab = class extends import_obsidian2.PluginSettingTab {
     await this.plugin.saveSettings();
     this.plugin.refreshDecorations();
   }
+  // Obsidian 设置页入口。getSettingDefinitions() 需 1.13.0+，本插件
+  // minAppVersion = 1.4.0，故仍用 display()；实际渲染逻辑抽到 render()，
+  // 便于内部增删规则/图标后就地重渲染。
   display() {
+    this.render();
+  }
+  render() {
     const { containerEl } = this;
     containerEl.empty();
     const L = t();
-    new import_obsidian2.Setting(containerEl).setName(L.heading).setDesc(L.headingDesc).setHeading();
-    new import_obsidian2.Setting(containerEl).setName(L.iconSize).setDesc(L.iconSizeDesc).addSlider((slider) => {
-      slider.setLimits(12, 24, 1).setValue(this.plugin.settings.iconSize || 16).setDynamicTooltip().onChange(async (value) => {
+    new import_obsidian3.Setting(containerEl).setName(L.heading).setDesc(L.headingDesc).setHeading();
+    new import_obsidian3.Setting(containerEl).setName(L.iconSize).setDesc(L.iconSizeDesc).addSlider((slider) => {
+      slider.setLimits(12, 24, 1).setValue(this.plugin.settings.iconSize || 16).onChange(async (value) => {
         this.plugin.settings.iconSize = value;
         await this.persist();
       });
     });
     const rulesWrap = containerEl.createDiv({ cls: "property-icons-rules" });
     this.plugin.settings.rules.forEach((rule) => this.renderRuleCard(rulesWrap, rule));
-    new import_obsidian2.Setting(containerEl).addButton((btn) => {
+    new import_obsidian3.Setting(containerEl).addButton((btn) => {
       btn.setButtonText(L.addRuleGroup).setCta().onClick(async () => {
         const rule = {
           id: genId("rule"),
@@ -357,16 +366,16 @@ var PropertyIconsSettingTab = class extends import_obsidian2.PluginSettingTab {
         };
         this.plugin.settings.rules.push(rule);
         await this.persist();
-        this.display();
+        this.render();
       });
     });
-    new import_obsidian2.Setting(containerEl).setName(L.customIcons).setDesc(L.customIconsDesc).setHeading();
+    new import_obsidian3.Setting(containerEl).setName(L.customIcons).setDesc(L.customIconsDesc).setHeading();
     this.renderCustomIcons(containerEl);
   }
   renderRuleCard(parent, rule) {
     const L = t();
     const card = parent.createDiv({ cls: "property-icons-rule-card" });
-    const head = new import_obsidian2.Setting(card).addText((txt) => {
+    const head = new import_obsidian3.Setting(card).addText((txt) => {
       txt.setPlaceholder(L.ruleNamePlaceholder).setValue(rule.name).onChange(async (v) => {
         rule.name = v;
         await this.persist();
@@ -380,12 +389,12 @@ var PropertyIconsSettingTab = class extends import_obsidian2.PluginSettingTab {
       b.setIcon("trash").setTooltip(L.deleteRuleTooltip).onClick(async () => {
         this.plugin.settings.rules = this.plugin.settings.rules.filter((r) => r.id !== rule.id);
         await this.persist();
-        this.display();
+        this.render();
       });
     });
     head.setName("");
     head.settingEl.addClass("property-icons-rule-head");
-    new import_obsidian2.Setting(card).setName(L.conditionCombine).addDropdown((dd) => {
+    new import_obsidian3.Setting(card).setName(L.conditionCombine).addDropdown((dd) => {
       dd.addOption("AND", L.opAll);
       dd.addOption("OR", L.opAny);
       dd.setValue(rule.op);
@@ -396,11 +405,11 @@ var PropertyIconsSettingTab = class extends import_obsidian2.PluginSettingTab {
     });
     const condsWrap = card.createDiv({ cls: "property-icons-conditions" });
     rule.conditions.forEach((cond, idx) => this.renderConditionRow(condsWrap, rule, cond, idx));
-    new import_obsidian2.Setting(card).addButton((btn) => {
+    new import_obsidian3.Setting(card).addButton((btn) => {
       btn.setButtonText(L.addCondition).onClick(async () => {
         rule.conditions.push({ property: "", value: "" });
         await this.persist();
-        this.display();
+        this.render();
       });
     });
     const iconLabel = card.createDiv({ cls: "property-icons-icon-label", text: L.iconLabel });
@@ -409,7 +418,7 @@ var PropertyIconsSettingTab = class extends import_obsidian2.PluginSettingTab {
   }
   renderConditionRow(parent, rule, cond, idx) {
     const L = t();
-    const setting = new import_obsidian2.Setting(parent);
+    const setting = new import_obsidian3.Setting(parent);
     setting.settingEl.addClass("property-icons-cond-row");
     setting.infoEl.remove();
     setting.addText((txt) => {
@@ -431,7 +440,7 @@ var PropertyIconsSettingTab = class extends import_obsidian2.PluginSettingTab {
         if (rule.conditions.length === 0)
           rule.conditions.push({ property: "", value: "" });
         await this.persist();
-        this.display();
+        this.render();
       });
     });
   }
@@ -446,7 +455,7 @@ var PropertyIconsSettingTab = class extends import_obsidian2.PluginSettingTab {
       opt.onClickEvent(async () => {
         rule.icon = ref;
         await this.persist();
-        this.display();
+        this.render();
       });
     };
     for (const icon of BUILTIN_ICONS) {
@@ -461,7 +470,7 @@ var PropertyIconsSettingTab = class extends import_obsidian2.PluginSettingTab {
   }
   renderCustomIcons(containerEl) {
     const L = t();
-    const uploadSetting = new import_obsidian2.Setting(containerEl).setName(L.uploadIcon);
+    const uploadSetting = new import_obsidian3.Setting(containerEl).setName(L.uploadIcon);
     const fileInput = uploadSetting.controlEl.createEl("input", {
       attr: { type: "file", accept: ".jpg,.jpeg,.png,.svg,image/*" },
       cls: "property-icons-file-input"
@@ -479,7 +488,7 @@ var PropertyIconsSettingTab = class extends import_obsidian2.PluginSettingTab {
       return;
     }
     for (const custom of this.plugin.settings.customIcons) {
-      const row = new import_obsidian2.Setting(list).setName(custom.name);
+      const row = new import_obsidian3.Setting(list).setName(custom.name);
       const preview = row.nameEl.createSpan({ cls: "property-icons-custom-preview" });
       preview.createEl("img", { attr: { src: custom.dataUri, alt: "" } });
       row.addExtraButton((b) => {
@@ -490,7 +499,7 @@ var PropertyIconsSettingTab = class extends import_obsidian2.PluginSettingTab {
               rule.icon = `builtin:${BUILTIN_ICONS[0].id}`;
           }
           await this.persist();
-          this.display();
+          this.render();
         });
       });
     }
@@ -499,21 +508,24 @@ var PropertyIconsSettingTab = class extends import_obsidian2.PluginSettingTab {
     const L = t();
     const ext = (file.name.split(".").pop() || "").toLowerCase();
     if (!ACCEPTED_EXT.includes(ext)) {
-      new import_obsidian2.Notice(L.unsupportedFormat(ext, ACCEPTED_EXT.join(" / ")));
+      new import_obsidian3.Notice(L.unsupportedFormat(ext, ACCEPTED_EXT.join(" / ")));
       return;
     }
     if (file.size > CUSTOM_ICON_MAX_BYTES) {
-      new import_obsidian2.Notice(L.imageTooBig(Math.round(file.size / 1024)));
+      new import_obsidian3.Notice(L.imageTooBig(Math.round(file.size / 1024)));
       return;
     }
     const dataUri = await new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => resolve(String(reader.result || ""));
-      reader.onerror = () => reject(reader.error);
+      reader.onerror = () => {
+        var _a;
+        return reject((_a = reader.error) != null ? _a : new Error("FileReader failed"));
+      };
       reader.readAsDataURL(file);
     }).catch(() => "");
     if (!dataUri) {
-      new import_obsidian2.Notice(L.readImageFailed);
+      new import_obsidian3.Notice(L.readImageFailed);
       return;
     }
     this.plugin.settings.customIcons.push({
@@ -522,12 +534,12 @@ var PropertyIconsSettingTab = class extends import_obsidian2.PluginSettingTab {
       dataUri
     });
     await this.persist();
-    this.display();
+    this.render();
   }
 };
 
 // src/main.ts
-var PropertyIconsPlugin = class extends import_obsidian3.Plugin {
+var PropertyIconsPlugin = class extends import_obsidian4.Plugin {
   constructor() {
     super(...arguments);
     this.settings = DEFAULT_SETTINGS;

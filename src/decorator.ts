@@ -38,7 +38,7 @@ export class ExplorerDecorator {
       const icon = getBuiltinIcon(id);
       const svgEl = builtinSvgEl(id);
       if (!icon || !svgEl) return null;
-      badge.appendChild(document.importNode(svgEl, true));
+      badge.appendChild(activeDocument.importNode(svgEl, true));
       badge.setAttribute('aria-label', icon.label);
       return badge;
     }
@@ -144,7 +144,7 @@ export class ExplorerDecorator {
       window.clearTimeout(this.debounceTimer);
       this.debounceTimer = null;
     }
-    document
+    activeDocument
       .querySelectorAll('.' + BADGE_CONTAINER_CLASS)
       .forEach((n) => n.remove());
   }

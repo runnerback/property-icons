@@ -21,7 +21,14 @@ export class PropertyIconsSettingTab extends PluginSettingTab {
     this.plugin.refreshDecorations();
   }
 
+  // Obsidian 设置页入口。getSettingDefinitions() 需 1.13.0+，本插件
+  // minAppVersion = 1.4.0，故仍用 display()；实际渲染逻辑抽到 render()，
+  // 便于内部增删规则/图标后就地重渲染。
   display(): void {
+    this.render();
+  }
+
+  private render(): void {
     const { containerEl } = this;
     containerEl.empty();
 
@@ -39,7 +46,6 @@ export class PropertyIconsSettingTab extends PluginSettingTab {
         slider
           .setLimits(12, 24, 1)
           .setValue(this.plugin.settings.iconSize || 16)
-          .setDynamicTooltip()
           .onChange(async (value) => {
             this.plugin.settings.iconSize = value;
             await this.persist();
@@ -65,7 +71,7 @@ export class PropertyIconsSettingTab extends PluginSettingTab {
           };
           this.plugin.settings.rules.push(rule);
           await this.persist();
-          this.display();
+          this.render();
         });
     });
 
@@ -106,7 +112,7 @@ export class PropertyIconsSettingTab extends PluginSettingTab {
           .onClick(async () => {
             this.plugin.settings.rules = this.plugin.settings.rules.filter((r) => r.id !== rule.id);
             await this.persist();
-            this.display();
+            this.render();
           });
       });
     head.setName('');
@@ -133,7 +139,7 @@ export class PropertyIconsSettingTab extends PluginSettingTab {
       btn.setButtonText(L.addCondition).onClick(async () => {
         rule.conditions.push({ property: '', value: '' });
         await this.persist();
-        this.display();
+        this.render();
       });
     });
 
@@ -173,7 +179,7 @@ export class PropertyIconsSettingTab extends PluginSettingTab {
           rule.conditions.splice(idx, 1);
           if (rule.conditions.length === 0) rule.conditions.push({ property: '', value: '' });
           await this.persist();
-          this.display();
+          this.render();
         });
     });
   }
@@ -189,7 +195,7 @@ export class PropertyIconsSettingTab extends PluginSettingTab {
       opt.onClickEvent(async () => {
         rule.icon = ref;
         await this.persist();
-        this.display();
+        this.render();
       });
     };
 
@@ -237,7 +243,7 @@ export class PropertyIconsSettingTab extends PluginSettingTab {
               if (rule.icon === `custom:${custom.id}`) rule.icon = `builtin:${BUILTIN_ICONS[0].id}`;
             }
             await this.persist();
-            this.display();
+            this.render();
           });
       });
     }
@@ -257,7 +263,7 @@ export class PropertyIconsSettingTab extends PluginSettingTab {
     const dataUri = await new Promise<string>((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => resolve(String(reader.result || ''));
-      reader.onerror = () => reject(reader.error);
+      reader.onerror = () => reject(reader.error ?? new Error('FileReader failed'));
       reader.readAsDataURL(file);
     }).catch(() => '');
 
@@ -271,6 +277,6 @@ export class PropertyIconsSettingTab extends PluginSettingTab {
       dataUri,
     });
     await this.persist();
-    this.display();
+    this.render();
   }
 }

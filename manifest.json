@@ -1,10 +1,10 @@
 {
 	"id": "property-icons",
 	"name": "Property Icons",
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"minAppVersion": "1.4.0",
 	"description": "Show badge icons before file names in the explorer based on note property (frontmatter) rules. Configure multiple rule groups with AND/OR conditions, each mapped to a built-in brand icon or your own uploaded image.",
 	"author": "runnerback",
-	"authorUrl": "https://github.com/runnerback/property-icons",
+	"authorUrl": "https://github.com/runnerback",
 	"isDesktopOnly": false
 }
