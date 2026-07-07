@@ -6,6 +6,8 @@
 
 Your notes already carry their status in properties — `publish_status: done`, `publish_platform: wechat`, `priority: high`. **Property Icons** turns those into small icons in the file list, so you can see state at a glance without opening anything.
 
+![Property Icons demo](src/gif/property-icons.gif)
+
 ## Features
 
 - **Rule groups** — create any number of rule groups. Each group is a set of `property = value` conditions.

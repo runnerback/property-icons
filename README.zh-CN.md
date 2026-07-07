@@ -6,6 +6,8 @@
 
 你的笔记本来就把状态写在属性里 —— `publish_status: done`、`publish_platform: wechat`、`priority: high`。**Property Icons** 把这些状态变成文件列表里的小图标，不用打开笔记，一眼就能看到状态。
 
+![Property Icons 演示](src/gif/property-icons.gif)
+
 ## 功能
 
 - **规则组** —— 可创建任意多组规则，每组是一组「属性 = 值」条件。
