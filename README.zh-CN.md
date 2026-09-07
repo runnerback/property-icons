@@ -20,8 +20,8 @@
 ## 用法
 
 1. 启用插件，打开 **设置 → Property Icons**。
-2. 点击 **新增规则组**。
-3. 添加一个或多个条件（例如属性 `publish_status`、值 `done`），选 **且/或**，再选一个图标。
+2. 在 **规则组** 列表点 **+**，新规则组会在编辑弹窗中打开。
+3. 添加一个或多个条件（例如属性 `publish_status`、值 `done`），选 **且/或**，再选一个图标。列表里可拖拽排序、删除规则组。
 4. frontmatter 命中的笔记，就会在文件浏览器里的文件名前显示该图标。
 
 示例 —— 给已同步到微信草稿的笔记显示微信图标：
@@ -47,6 +47,11 @@ publish_status: done
 ## 致谢
 
 本插件受 **Maksim Volkov（[@hemy301](https://github.com/hemy301)）** 的 [Mark as Read / Explorer Property Attributes](https://github.com/hemy301/explorer-property-attributes) 启发 —— 「把笔记属性直接呈现到文件浏览器」这个思路来自他的作品。Property Icons 是拥有独立规则引擎与图标系统的独立实现，但最初的灵感源自那个项目。谢谢。
+
+## 更新记录
+
+- v0.2.0（2026-09-07）：设置页迁移到 Obsidian 1.13 声明式 Settings API（`getSettingDefinitions`）；规则组改为弹窗编辑，支持拖拽排序。最低 Obsidian 版本 1.13.0。
+- v0.1.x：初始版本（Obsidian ≥ 1.4.0）。
 
 ## 许可协议
 

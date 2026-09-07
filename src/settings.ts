@@ -1,8 +1,10 @@
-import { App, PluginSettingTab, Setting, Notice } from 'obsidian';
+import { App, Notice, PluginSettingTab } from 'obsidian';
+import type { Setting, SettingDefinitionItem } from 'obsidian';
 import type PropertyIconsPlugin from './main';
-import { Condition, Rule, RuleOperator } from './types';
+import { CustomIcon, Rule } from './types';
 import { BUILTIN_ICONS, builtinSvgEl } from './icons';
 import { t } from './i18n';
+import { RuleEditModal } from './ruleModal';
 
 const CUSTOM_ICON_MAX_BYTES = 256 * 1024; // 单张自定义图标上限 256KB（存 data.json，别撑太大）
 const ACCEPTED_EXT = ['jpg', 'jpeg', 'png', 'svg'];
@@ -11,6 +13,30 @@ function genId(prefix: string): string {
   return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
 }
 
+/** 按图标引用生成列表行里的小预览（内置=SVG，自定义=img）；引用无效返回 null（与 decorator 的处理一致）。 */
+function iconPreviewEl(ref: string, customIcons: CustomIcon[]): HTMLElement | null {
+  const wrap = createSpan({ cls: 'property-icons-preview' });
+  if (ref.startsWith('builtin:')) {
+    const svg = builtinSvgEl(ref.slice('builtin:'.length));
+    if (!svg) return null;
+    wrap.appendChild(svg);
+    return wrap;
+  }
+  if (ref.startsWith('custom:')) {
+    const custom = customIcons.find((c) => c.id === ref.slice('custom:'.length));
+    if (!custom) return null;
+    wrap.createEl('img', { attr: { src: custom.dataUri, alt: '' } });
+    return wrap;
+  }
+  return null;
+}
+
+/**
+ * 设置页：Obsidian 1.13 声明式 Settings API（getSettingDefinitions）。
+ * 结构：顶部 group（说明 + 图标大小滑块）→ 规则组 list（增/删/拖拽排序，行内启用开关 + 编辑按钮，
+ * 详细编辑在 RuleEditModal）→ 自定义图标 list（上传/删除）→ 图标格式说明脚注。
+ * 增删改后统一 persist()（保存 + 刷新文件树），结构变化再 update() 重渲染。
+ */
 export class PropertyIconsSettingTab extends PluginSettingTab {
   constructor(app: App, private plugin: PropertyIconsPlugin) {
     super(app, plugin);
@@ -21,242 +47,146 @@ export class PropertyIconsSettingTab extends PluginSettingTab {
     this.plugin.refreshDecorations();
   }
 
-  // Obsidian 设置页入口。getSettingDefinitions() 需 1.13.0+，本插件
-  // minAppVersion = 1.4.0，故仍用 display()；实际渲染逻辑抽到 render()，
-  // 便于内部增删规则/图标后就地重渲染。
-  display(): void {
-    this.render();
+  /** 声明式 control（目前只有 iconSize 滑块）的写入口：写 settings → 保存 → 立刻刷新文件树。 */
+  async setControlValue(key: string, value: unknown): Promise<void> {
+    (this.plugin.settings as unknown as Record<string, unknown>)[key] = value;
+    await this.persist();
   }
 
-  private render(): void {
-    const { containerEl } = this;
-    containerEl.empty();
-
+  getSettingDefinitions(): SettingDefinitionItem[] {
     const L = t();
+    const settings = this.plugin.settings;
 
-    new Setting(containerEl)
-      .setName(L.heading)
-      .setDesc(L.headingDesc)
-      .setHeading();
-
-    new Setting(containerEl)
-      .setName(L.iconSize)
-      .setDesc(L.iconSizeDesc)
-      .addSlider((slider) => {
-        slider
-          .setLimits(12, 24, 1)
-          .setValue(this.plugin.settings.iconSize || 16)
-          .onChange(async (value) => {
-            this.plugin.settings.iconSize = value;
-            await this.persist();
-          });
-      });
-
-    // ── 规则组列表 ──
-    const rulesWrap = containerEl.createDiv({ cls: 'property-icons-rules' });
-    this.plugin.settings.rules.forEach((rule) => this.renderRuleCard(rulesWrap, rule));
-
-    new Setting(containerEl).addButton((btn) => {
-      btn
-        .setButtonText(L.addRuleGroup)
-        .setCta()
-        .onClick(async () => {
-          const rule: Rule = {
-            id: genId('rule'),
-            name: L.ruleDefaultName(this.plugin.settings.rules.length + 1),
-            op: 'AND',
-            conditions: [{ property: '', value: '' }],
-            icon: `builtin:${BUILTIN_ICONS[0].id}`,
-            enabled: true,
-          };
-          this.plugin.settings.rules.push(rule);
-          await this.persist();
-          this.render();
-        });
-    });
-
-    // ── 自定义图标 ──
-    new Setting(containerEl)
-      .setName(L.customIcons)
-      .setDesc(L.customIconsDesc)
-      .setHeading();
-
-    this.renderCustomIcons(containerEl);
+    return [
+      {
+        type: 'group',
+        heading: L.heading,
+        items: [
+          // 无 control 的说明行：只承载 headingDesc
+          { name: '', desc: L.headingDesc, searchable: false },
+          {
+            name: L.iconSize,
+            desc: L.iconSizeDesc,
+            control: { type: 'slider', key: 'iconSize', min: 12, max: 24, step: 1, defaultValue: 16 },
+          },
+        ],
+      },
+      {
+        type: 'list',
+        heading: L.rulesHeading,
+        emptyState: L.noRules,
+        addItem: { name: L.addRuleGroup, action: () => void this.createRule() },
+        onReorder: (oldIndex, newIndex) => {
+          const [moved] = settings.rules.splice(oldIndex, 1);
+          settings.rules.splice(newIndex, 0, moved);
+          this.update();
+          void this.persist();
+        },
+        onDelete: (index) => {
+          settings.rules.splice(index, 1);
+          this.update();
+          void this.persist();
+        },
+        items: settings.rules.map((rule, i) => ({
+          name: rule.name || L.ruleDefaultName(i + 1),
+          desc: this.describeConditions(rule),
+          searchable: false,
+          render: (setting: Setting) => this.renderRuleRow(setting, rule),
+        })),
+      },
+      {
+        type: 'list',
+        heading: L.customIcons,
+        emptyState: L.noCustomIcons,
+        addItem: { name: L.uploadIcon, action: () => this.pickIconFile() },
+        onDelete: (index) => this.deleteCustomIcon(index),
+        items: settings.customIcons.map((icon) => ({
+          name: icon.name,
+          searchable: false,
+          render: (setting: Setting) => {
+            const preview = iconPreviewEl(`custom:${icon.id}`, settings.customIcons);
+            if (preview) setting.nameEl.prepend(preview);
+          },
+        })),
+      },
+      // list 头部没有 desc 位，格式/大小限制作为脚注放在图标列表下方
+      { name: '', desc: L.customIconsDesc },
+    ];
   }
 
-  private renderRuleCard(parent: HTMLElement, rule: Rule): void {
+  // ── 规则组 ──
+
+  /** 条件摘要：`prop = val 且 prop2 包含 val2`；无有效条件时提示尚未设置。 */
+  private describeConditions(rule: Rule): string {
     const L = t();
-    const card = parent.createDiv({ cls: 'property-icons-rule-card' });
-
-    // 顶行：名称 + 启用 + 删除
-    const head = new Setting(card)
-      .addText((txt) => {
-        txt.setPlaceholder(L.ruleNamePlaceholder)
-          .setValue(rule.name)
-          .onChange(async (v) => {
-            rule.name = v;
-            await this.persist();
-          });
-      })
-      .addToggle((tg) => {
-        tg.setTooltip(L.enableRuleTooltip)
-          .setValue(rule.enabled)
-          .onChange(async (v) => {
-            rule.enabled = v;
-            await this.persist();
-          });
-      })
-      .addExtraButton((b) => {
-        b.setIcon('trash')
-          .setTooltip(L.deleteRuleTooltip)
-          .onClick(async () => {
-            this.plugin.settings.rules = this.plugin.settings.rules.filter((r) => r.id !== rule.id);
-            await this.persist();
-            this.render();
-          });
-      });
-    head.setName('');
-    head.settingEl.addClass('property-icons-rule-head');
-
-    // 操作符：且 / 或
-    new Setting(card)
-      .setName(L.conditionCombine)
-      .addDropdown((dd) => {
-        dd.addOption('AND', L.opAll);
-        dd.addOption('OR', L.opAny);
-        dd.setValue(rule.op);
-        dd.onChange(async (v) => {
-          rule.op = v as RuleOperator;
-          await this.persist();
-        });
-      });
-
-    // 条件列表
-    const condsWrap = card.createDiv({ cls: 'property-icons-conditions' });
-    rule.conditions.forEach((cond, idx) => this.renderConditionRow(condsWrap, rule, cond, idx));
-
-    new Setting(card).addButton((btn) => {
-      btn.setButtonText(L.addCondition).onClick(async () => {
-        rule.conditions.push({ property: '', value: '' });
-        await this.persist();
-        this.render();
-      });
-    });
-
-    // 图标选择
-    const iconLabel = card.createDiv({ cls: 'property-icons-icon-label', text: L.iconLabel });
-    iconLabel.setAttr('aria-hidden', 'true');
-    this.renderIconPicker(card, rule);
+    const parts = rule.conditions
+      .filter((c) => c.property)
+      .map((c) => `${c.property} ${c.match === 'contains' ? L.matchContains : L.matchEquals} ${c.value}`);
+    if (parts.length === 0) return L.noConditions;
+    return parts.join(rule.op === 'AND' ? L.joinAnd : L.joinOr);
   }
 
-  private renderConditionRow(parent: HTMLElement, rule: Rule, cond: Condition, idx: number): void {
+  /** 列表行：名称前图标预览 + 启用开关 + 编辑按钮（框架另行追加删除 X 与拖拽把手）。 */
+  private renderRuleRow(setting: Setting, rule: Rule): void {
     const L = t();
-    const setting = new Setting(parent);
-    setting.settingEl.addClass('property-icons-cond-row');
-    setting.infoEl.remove(); // 去掉左侧空 name 占位，条件行更紧凑
+    const preview = iconPreviewEl(rule.icon, this.plugin.settings.customIcons);
+    if (preview) setting.nameEl.prepend(preview);
 
-    setting.addText((txt) => {
-      txt.setPlaceholder(L.propertyPlaceholder)
-        .setValue(cond.property)
+    setting.addToggle((tg) => {
+      tg.setTooltip(L.enableRuleTooltip)
+        .setValue(rule.enabled)
         .onChange(async (v) => {
-          cond.property = v.trim();
-          await this.persist();
-        });
-    });
-    // 匹配方式：=（精确等于）/ 包含（子串；数组属性按任一元素判断）
-    setting.addDropdown((dd) => {
-      dd.addOption('equals', L.matchEquals);
-      dd.addOption('contains', L.matchContains);
-      dd.setValue(cond.match === 'contains' ? 'contains' : 'equals');
-      dd.selectEl.setAttribute('aria-label', L.matchTooltip);
-      dd.onChange(async (v) => {
-        cond.match = v === 'contains' ? 'contains' : 'equals';
-        await this.persist();
-      });
-    });
-    setting.addText((txt) => {
-      txt.setPlaceholder(L.valuePlaceholder)
-        .setValue(cond.value)
-        .onChange(async (v) => {
-          cond.value = v;
+          rule.enabled = v;
           await this.persist();
         });
     });
     setting.addExtraButton((b) => {
-      b.setIcon('x')
-        .setTooltip(L.deleteConditionTooltip)
-        .onClick(async () => {
-          rule.conditions.splice(idx, 1);
-          if (rule.conditions.length === 0) rule.conditions.push({ property: '', value: '' });
-          await this.persist();
-          this.render();
-        });
+      b.setIcon('lucide-pencil')
+        .setTooltip(L.editRule)
+        .onClick(() => this.openRuleModal(rule));
     });
   }
 
-  private renderIconPicker(parent: HTMLElement, rule: Rule): void {
-    const grid = parent.createDiv({ cls: 'property-icons-icon-grid' });
-
-    const addOption = (ref: string, label: string, node: Node) => {
-      const opt = grid.createDiv({ cls: 'property-icons-icon-option' });
-      opt.setAttribute('aria-label', label);
-      if (rule.icon === ref) opt.addClass('is-selected');
-      opt.appendChild(node);
-      opt.onClickEvent(async () => {
-        rule.icon = ref;
-        await this.persist();
-        this.render();
-      });
-    };
-
-    for (const icon of BUILTIN_ICONS) {
-      const svg = builtinSvgEl(icon.id);
-      if (svg) addOption(`builtin:${icon.id}`, icon.label, svg);
-    }
-    for (const custom of this.plugin.settings.customIcons) {
-      const img = createEl('img', { attr: { src: custom.dataUri, alt: '' } });
-      addOption(`custom:${custom.id}`, custom.name, img);
-    }
-  }
-
-  private renderCustomIcons(containerEl: HTMLElement): void {
+  private async createRule(): Promise<void> {
     const L = t();
-    // 上传按钮（隐藏的 file input）
-    const uploadSetting = new Setting(containerEl).setName(L.uploadIcon);
-    const fileInput = uploadSetting.controlEl.createEl('input', {
-      attr: { type: 'file', accept: '.jpg,.jpeg,.png,.svg,image/*' },
-      cls: 'property-icons-file-input',
-    });
-    fileInput.addEventListener('change', () => {
-      const file = fileInput.files?.[0];
-      if (file) void this.handleUpload(file);
-      fileInput.value = '';
-    });
+    const rule: Rule = {
+      id: genId('rule'),
+      name: L.ruleDefaultName(this.plugin.settings.rules.length + 1),
+      op: 'AND',
+      conditions: [{ property: '', value: '' }],
+      icon: `builtin:${BUILTIN_ICONS[0].id}`,
+      enabled: true,
+    };
+    this.plugin.settings.rules.push(rule);
+    await this.persist();
+    this.update();
+    this.openRuleModal(rule);
+  }
 
-    // 已上传列表
-    const list = containerEl.createDiv({ cls: 'property-icons-custom-list' });
-    if (this.plugin.settings.customIcons.length === 0) {
-      list.createDiv({ cls: 'property-icons-empty', text: L.noCustomIcons });
-      return;
+  private openRuleModal(rule: Rule): void {
+    new RuleEditModal(this.app, this.plugin, rule, () => this.update()).open();
+  }
+
+  // ── 自定义图标 ──
+
+  /** 点 + 时临时建一个 file input 触发系统选图框（无需挂到 DOM）。 */
+  private pickIconFile(): void {
+    const input = createEl('input', { type: 'file', attr: { accept: '.jpg,.jpeg,.png,.svg,image/*' } });
+    input.addEventListener('change', () => {
+      const file = input.files?.[0];
+      if (file) void this.handleUpload(file);
+    });
+    input.click();
+  }
+
+  private deleteCustomIcon(index: number): void {
+    const [removed] = this.plugin.settings.customIcons.splice(index, 1);
+    // 用到该图标的规则回退到第一个内置图标，避免空图标
+    for (const rule of this.plugin.settings.rules) {
+      if (rule.icon === `custom:${removed.id}`) rule.icon = `builtin:${BUILTIN_ICONS[0].id}`;
     }
-    for (const custom of this.plugin.settings.customIcons) {
-      const row = new Setting(list).setName(custom.name);
-      const preview = row.nameEl.createSpan({ cls: 'property-icons-custom-preview' });
-      preview.createEl('img', { attr: { src: custom.dataUri, alt: '' } });
-      row.addExtraButton((b) => {
-        b.setIcon('trash')
-          .setTooltip(L.deleteIconTooltip)
-          .onClick(async () => {
-            this.plugin.settings.customIcons = this.plugin.settings.customIcons.filter((c) => c.id !== custom.id);
-            // 用到该图标的规则回退到第一个内置图标，避免空图标
-            for (const rule of this.plugin.settings.rules) {
-              if (rule.icon === `custom:${custom.id}`) rule.icon = `builtin:${BUILTIN_ICONS[0].id}`;
-            }
-            await this.persist();
-            this.render();
-          });
-      });
-    }
+    this.update();
+    void this.persist();
   }
 
   private async handleUpload(file: File): Promise<void> {
@@ -287,6 +217,6 @@ export class PropertyIconsSettingTab extends PluginSettingTab {
       dataUri,
     });
     await this.persist();
-    this.render();
+    this.update();
   }
 }

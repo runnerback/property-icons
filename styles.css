@@ -29,19 +29,24 @@
   border-radius: 3px;
 }
 
-/* ===== 设置页：规则组卡片 ===== */
-.property-icons-rule-card {
-  border: 1px solid var(--background-modifier-border);
-  border-radius: 8px;
-  padding: 8px 12px 12px;
-  margin-bottom: 14px;
-  background: var(--background-secondary);
+/* ===== 设置页：列表行里名称前的小预览（规则组 / 自定义图标共用） ===== */
+.property-icons-preview {
+  display: inline-flex;
+  width: 18px;
+  height: 18px;
+  margin-right: 6px;
+  vertical-align: middle;
 }
 
-.property-icons-rule-head .setting-item-control {
-  gap: 6px;
+.property-icons-preview svg,
+.property-icons-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 3px;
 }
 
+/* ===== 规则组编辑弹窗：条件行 + 图标网格 ===== */
 .property-icons-conditions {
   margin: 4px 0;
 }
@@ -56,7 +61,6 @@
   flex-wrap: wrap;
   justify-content: flex-start;
 }
-
 
 .property-icons-icon-label {
   font-size: var(--font-ui-smaller);
@@ -98,30 +102,4 @@
   height: 100%;
   object-fit: contain;
   border-radius: 3px;
-}
-
-/* ===== 设置页：自定义图标 ===== */
-.property-icons-file-input {
-  max-width: 220px;
-}
-
-.property-icons-custom-preview {
-  display: inline-flex;
-  width: 18px;
-  height: 18px;
-  margin-left: 8px;
-  vertical-align: middle;
-}
-
-.property-icons-custom-preview img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  border-radius: 3px;
-}
-
-.property-icons-empty {
-  color: var(--text-muted);
-  font-size: var(--font-ui-smaller);
-  padding: 6px 0;
 }
