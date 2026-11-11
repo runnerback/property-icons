@@ -1,7 +1,7 @@
 name: Release Obsidian plugin
 
-# 推送形如 0.1.1 的 tag 时触发：构建 → 生成构建溯源证明(attestation) → 创建 Release 并上传三件套。
-# Release 名自动带上版本号(= tag)，同时补齐 review 提示的 artifact attestations。
+# 推送形如 0.1.1 的 tag 时触发：取 Release 说明 → 构建 → 生成构建溯源证明(attestation) → 创建 Release 并上传三件套。
+# Release 名自动带上版本号(= tag)，同时补齐 review 提示的 artifact attestations 和 Release 说明。
 on:
   push:
     tags:
@@ -17,6 +17,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      # Release 说明取自 README.md「Changelog」里本版本那一段：`- v<tag> (日期)` 这一行下面缩进的条目。
+      # 没写就在这里失败，不发出没有说明的 Release（社区目录审核会提示 The release has no description）。
+      - name: Release notes from README changelog
+        run: |
+          awk -v head="- v${GITHUB_REF_NAME} " 'index($0, head) == 1 { on = 1; next } on && /^- / { exit } on { sub(/^  /, ""); print }' README.md > release-notes.md
+          grep -q '[^[:space:]]' release-notes.md || { echo "README.md 的 Changelog 里没有 v${GITHUB_REF_NAME} 的条目"; exit 1; }
+          cat release-notes.md
 
       - uses: actions/setup-node@v4
         with:
@@ -40,6 +48,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           name: ${{ github.ref_name }}   # Release 名 = tag(含版本号)
+          body_path: release-notes.md
           files: |
             main.js
             manifest.json

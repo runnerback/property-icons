@@ -51,8 +51,12 @@ This plugin was inspired by [Mark as Read / Explorer Property Attributes](https:
 
 ## Changelog
 
-- v0.2.2 (2026-11-11): settings **export / import** at the bottom of the settings tab (desktop only). Export writes one JSON file with all rule groups, custom icons and the icon size; import replaces the current settings as a whole, asks for confirmation when rule groups or custom icons already exist, and rejects an invalid file with the reason, changing nothing.
-- v0.2.1 (2026-11-11): each row in the rule group list has a **duplicate** button — the copy is placed right below the original and opens for editing; the edit dialog no longer jumps back to the top after adding / deleting a condition or picking an icon when it is tall enough to scroll; default names of new rule groups no longer collide with existing ones; new built-in icons for **快手 (Kuaishou)** and **知乎 (Zhihu)**, and the X icon is now the current logo, drawn in the theme text color; fixed on Obsidian 1.15 (settings now open in their own window): the **+** button for uploading a custom icon did nothing, and the description texts on the settings tab were not shown.
+- v0.2.2 (2026-11-11)
+  - **Export / import** at the bottom of the settings tab (desktop only): export writes one JSON file with all rule groups, custom icons and the icon size; import replaces the current settings as a whole, asks for confirmation when rule groups or custom icons already exist, and rejects an invalid file with the reason, changing nothing.
+  - **Duplicate** button on each row of the rule group list: the copy is placed right below the original and opens for editing.
+  - New built-in icons for **快手 (Kuaishou)** and **知乎 (Zhihu)**; the X icon is now the current logo, drawn in the theme text color.
+  - Fixed on Obsidian 1.15, where settings open in their own window: the **+** button for uploading a custom icon did nothing, and the description texts on the settings tab were not shown.
+  - The edit dialog no longer jumps back to the top after adding / deleting a condition or picking an icon when it is tall enough to scroll; default names of new rule groups no longer collide with existing ones.
 - v0.2.0 (2026-09-07): settings tab migrated to the Obsidian 1.13 declarative Settings API (`getSettingDefinitions`); rule groups are edited in a dialog and can be reordered by drag. Requires Obsidian ≥ 1.13.0.
 - v0.1.x: initial releases (Obsidian ≥ 1.4.0).
 

@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "node esbuild.config.mjs",
     "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
-    "test": "esbuild test/*.test.ts --bundle --platform=node --format=esm --outdir=test/.build --out-extension:.js=.mjs --log-level=warning && node --test test/.build/*.mjs"
+    "test": "esbuild tests/*.test.ts --bundle --platform=node --format=esm --outdir=tests/.build --out-extension:.js=.mjs --log-level=warning && node --test tests/.build/*.mjs"
   },
   "keywords": [
     "obsidian",

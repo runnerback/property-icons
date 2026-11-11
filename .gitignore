@@ -5,7 +5,7 @@ npm-debug.log*
 # Build output is committed at release time; ignore during dev if desired
 # main.js
 *.js.map
-test/.build/
+tests/.build/
 
 # OS / editor
 .DS_Store

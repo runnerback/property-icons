@@ -1,5 +1,5 @@
 // 配置导出 / 导入：整份设置（规则组、自定义图标、图标大小）与一个 JSON 文件互转。
-// 纯逻辑，不依赖 Obsidian；单测见 test/transfer.test.ts。
+// 纯逻辑，不依赖 Obsidian；单测见 tests/transfer.test.ts。
 
 import { ICON_SIZE_MAX, ICON_SIZE_MIN } from './types';
 import type { Condition, CustomIcon, PropertyIconsSettings, Rule } from './types';

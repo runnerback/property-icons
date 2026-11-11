@@ -839,7 +839,7 @@ var PropertyIconsSettingTab = class extends import_obsidian4.PluginSettingTab {
     }
     const dataUri = await new Promise((resolve, reject) => {
       const reader = new FileReader();
-      reader.onload = () => resolve(String(reader.result || ""));
+      reader.onload = () => resolve(typeof reader.result === "string" ? reader.result : "");
       reader.onerror = () => {
         var _a;
         return reject((_a = reader.error) != null ? _a : new Error("FileReader failed"));
@@ -892,7 +892,7 @@ var PropertyIconsSettingTab = class extends import_obsidian4.PluginSettingTab {
       await replace();
       return;
     }
-    new import_obsidian4.ConfirmationModal(this.app).setTitle(L.importConfirmTitle).setContent(L.importConfirmBody).addButton((b) => b.setButtonText(L.importConfirmButton).setWarning().onClick(replace)).addCancelButton().open();
+    new import_obsidian4.ConfirmationModal(this.app).setTitle(L.importConfirmTitle).setContent(L.importConfirmBody).addButton((b) => b.setButtonText(L.importConfirmButton).setDestructive().setCta().onClick(replace)).addCancelButton().open();
   }
 };
 

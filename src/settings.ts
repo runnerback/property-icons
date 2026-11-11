@@ -269,7 +269,7 @@ export class PropertyIconsSettingTab extends PluginSettingTab {
     }
     const dataUri = await new Promise<string>((resolve, reject) => {
       const reader = new FileReader();
-      reader.onload = () => resolve(String(reader.result || ''));
+      reader.onload = () => resolve(typeof reader.result === 'string' ? reader.result : '');
       reader.onerror = () => reject(reader.error ?? new Error('FileReader failed'));
       reader.readAsDataURL(file);
     }).catch(() => '');
@@ -325,7 +325,7 @@ export class PropertyIconsSettingTab extends PluginSettingTab {
     new ConfirmationModal(this.app)
       .setTitle(L.importConfirmTitle)
       .setContent(L.importConfirmBody)
-      .addButton((b) => b.setButtonText(L.importConfirmButton).setWarning().onClick(replace))
+      .addButton((b) => b.setButtonText(L.importConfirmButton).setDestructive().setCta().onClick(replace))
       .addCancelButton()
       .open();
   }
