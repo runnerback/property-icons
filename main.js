@@ -25,6 +25,8 @@ module.exports = __toCommonJS(main_exports);
 var import_obsidian5 = require("obsidian");
 
 // src/types.ts
+var ICON_SIZE_MIN = 12;
+var ICON_SIZE_MAX = 24;
 var DEFAULT_SETTINGS = {
   rules: [],
   customIcons: [],
@@ -48,16 +50,16 @@ function conditionMatches(fm, cond) {
   }
   return hit(raw);
 }
-function ruleMatches(fm, rule) {
-  if (!rule.enabled)
+function ruleMatches(fm, rule2) {
+  if (!rule2.enabled)
     return false;
-  const conds = rule.conditions.filter((c) => c.property);
+  const conds = rule2.conditions.filter((c) => c.property);
   if (conds.length === 0)
     return false;
-  return rule.op === "AND" ? conds.every((c) => conditionMatches(fm, c)) : conds.some((c) => conditionMatches(fm, c));
+  return rule2.op === "AND" ? conds.every((c) => conditionMatches(fm, c)) : conds.some((c) => conditionMatches(fm, c));
 }
 function matchingRules(fm, rules) {
-  return rules.filter((rule) => ruleMatches(fm, rule));
+  return rules.filter((rule2) => ruleMatches(fm, rule2));
 }
 
 // src/icons/platform-ic-sys/bilibili.svg
@@ -182,10 +184,10 @@ var ExplorerDecorator = class {
     const size = this.getSettings().iconSize || 16;
     container.style.setProperty("--property-icons-size", size + "px");
     let added = 0;
-    for (const rule of rules) {
-      const el = this.createIconEl(rule.icon);
+    for (const rule2 of rules) {
+      const el = this.createIconEl(rule2.icon);
       if (el) {
-        el.setAttribute("data-rule", rule.name || rule.id);
+        el.setAttribute("data-rule", rule2.name || rule2.id);
         container.appendChild(el);
         added += 1;
       }
@@ -290,7 +292,23 @@ var en = {
   noCustomIcons: "No custom icons yet. Click + to upload one.",
   unsupportedFormat: (ext, accepted) => `Unsupported format: .${ext} (only ${accepted})`,
   imageTooBig: (kb) => `Image too large (${kb}KB); the limit is 256KB`,
-  readImageFailed: "Failed to read the image"
+  readImageFailed: "Failed to read the image",
+  transferHeading: "Import / export",
+  exportSettings: "Export settings",
+  exportSettingsDesc: "Save all rule groups, custom icons and the icon size to one JSON file that can be imported on another device.",
+  exportButton: "Export",
+  importSettings: "Import settings",
+  importSettingsDesc: "Load an exported JSON file. It replaces all current rule groups, custom icons and the icon size.",
+  importButton: "Import",
+  importConfirmTitle: "Replace current settings?",
+  importConfirmBody: "Importing replaces all current rule groups and custom icons. This cannot be undone. Continue?",
+  importConfirmButton: "Import and replace",
+  importDone: (rules, icons) => `Imported ${rules} rule groups and ${icons} custom icons`,
+  importFailed: {
+    "not-export": () => "This is not a settings file exported by this plugin",
+    "newer-version": () => "This file was exported by a newer version of the plugin. Update the plugin, then import again.",
+    "bad-content": (where) => `The settings file is invalid: ${where}`
+  }
 };
 
 // src/i18n/zh.ts
@@ -329,7 +347,23 @@ var zh = {
   noCustomIcons: "\u6682\u65E0\u81EA\u5B9A\u4E49\u56FE\u6807\uFF0C\u70B9\u51FB + \u4E0A\u4F20",
   unsupportedFormat: (ext, accepted) => `\u4E0D\u652F\u6301\u7684\u683C\u5F0F\uFF1A.${ext}\uFF08\u4EC5\u652F\u6301 ${accepted}\uFF09`,
   imageTooBig: (kb) => `\u56FE\u7247\u8FC7\u5927\uFF08${kb}KB\uFF09\uFF0C\u4E0A\u9650 256KB`,
-  readImageFailed: "\u8BFB\u53D6\u56FE\u7247\u5931\u8D25"
+  readImageFailed: "\u8BFB\u53D6\u56FE\u7247\u5931\u8D25",
+  transferHeading: "\u5BFC\u5165 / \u5BFC\u51FA",
+  exportSettings: "\u5BFC\u51FA\u914D\u7F6E",
+  exportSettingsDesc: "\u628A\u5168\u90E8\u89C4\u5219\u7EC4\u3001\u81EA\u5B9A\u4E49\u56FE\u6807\u548C\u56FE\u6807\u5927\u5C0F\u4FDD\u5B58\u4E3A\u4E00\u4E2A JSON \u6587\u4EF6\uFF0C\u53EF\u5728\u53E6\u4E00\u53F0\u8BBE\u5907\u4E0A\u5BFC\u5165\u3002",
+  exportButton: "\u5BFC\u51FA",
+  importSettings: "\u5BFC\u5165\u914D\u7F6E",
+  importSettingsDesc: "\u8BFB\u53D6\u5BFC\u51FA\u7684 JSON \u6587\u4EF6\uFF0C\u66FF\u6362\u5F53\u524D\u5168\u90E8\u89C4\u5219\u7EC4\u3001\u81EA\u5B9A\u4E49\u56FE\u6807\u548C\u56FE\u6807\u5927\u5C0F\u3002",
+  importButton: "\u5BFC\u5165",
+  importConfirmTitle: "\u66FF\u6362\u5F53\u524D\u914D\u7F6E\uFF1F",
+  importConfirmBody: "\u5BFC\u5165\u4F1A\u66FF\u6362\u5F53\u524D\u5168\u90E8\u89C4\u5219\u7EC4\u548C\u81EA\u5B9A\u4E49\u56FE\u6807\uFF0C\u4E14\u65E0\u6CD5\u6062\u590D\u3002\u662F\u5426\u7EE7\u7EED\uFF1F",
+  importConfirmButton: "\u5BFC\u5165\u5E76\u66FF\u6362",
+  importDone: (rules, icons) => `\u5DF2\u5BFC\u5165 ${rules} \u4E2A\u89C4\u5219\u7EC4\u3001${icons} \u4E2A\u81EA\u5B9A\u4E49\u56FE\u6807`,
+  importFailed: {
+    "not-export": () => "\u8FD9\u4E0D\u662F\u672C\u63D2\u4EF6\u5BFC\u51FA\u7684\u914D\u7F6E\u6587\u4EF6",
+    "newer-version": () => "\u8BE5\u6587\u4EF6\u7531\u66F4\u65B0\u7248\u672C\u7684\u63D2\u4EF6\u5BFC\u51FA\uFF0C\u8BF7\u5148\u5347\u7EA7\u63D2\u4EF6\u518D\u5BFC\u5165",
+    "bad-content": (where) => `\u914D\u7F6E\u6587\u4EF6\u5185\u5BB9\u6709\u8BEF\uFF1A${where}`
+  }
 };
 
 // src/i18n/index.ts
@@ -352,10 +386,10 @@ function t() {
 // src/ruleModal.ts
 var import_obsidian3 = require("obsidian");
 var RuleEditModal = class extends import_obsidian3.Modal {
-  constructor(app, plugin, rule, onClosed) {
+  constructor(app, plugin, rule2, onClosed) {
     super(app);
     this.plugin = plugin;
-    this.rule = rule;
+    this.rule = rule2;
     this.onClosed = onClosed;
   }
   async persist() {
@@ -371,35 +405,35 @@ var RuleEditModal = class extends import_obsidian3.Modal {
     this.onClosed();
   }
   render() {
-    const { contentEl, modalEl, rule } = this;
+    const { contentEl, modalEl, rule: rule2 } = this;
     const scrollTop = modalEl.scrollTop;
     contentEl.empty();
     const L = t();
     new import_obsidian3.Setting(contentEl).setName(L.ruleName).addText((txt) => {
-      txt.setPlaceholder(L.ruleNamePlaceholder).setValue(rule.name).onChange(async (v) => {
-        rule.name = v;
+      txt.setPlaceholder(L.ruleNamePlaceholder).setValue(rule2.name).onChange(async (v) => {
+        rule2.name = v;
         await this.persist();
       });
     }).addToggle((tg) => {
-      tg.setTooltip(L.enableRuleTooltip).setValue(rule.enabled).onChange(async (v) => {
-        rule.enabled = v;
+      tg.setTooltip(L.enableRuleTooltip).setValue(rule2.enabled).onChange(async (v) => {
+        rule2.enabled = v;
         await this.persist();
       });
     });
     new import_obsidian3.Setting(contentEl).setName(L.conditionCombine).addDropdown((dd) => {
       dd.addOption("AND", L.opAll);
       dd.addOption("OR", L.opAny);
-      dd.setValue(rule.op);
+      dd.setValue(rule2.op);
       dd.onChange(async (v) => {
-        rule.op = v;
+        rule2.op = v;
         await this.persist();
       });
     });
     const condsWrap = contentEl.createDiv({ cls: "property-icons-conditions" });
-    rule.conditions.forEach((cond, idx) => this.renderConditionRow(condsWrap, cond, idx));
+    rule2.conditions.forEach((cond, idx) => this.renderConditionRow(condsWrap, cond, idx));
     new import_obsidian3.Setting(contentEl).addButton((btn) => {
       btn.setButtonText(L.addCondition).onClick(async () => {
-        rule.conditions.push({ property: "", value: "" });
+        rule2.conditions.push({ property: "", value: "" });
         await this.persist();
         this.render();
       });
@@ -411,7 +445,7 @@ var RuleEditModal = class extends import_obsidian3.Modal {
   }
   renderConditionRow(parent, cond, idx) {
     const L = t();
-    const { rule } = this;
+    const { rule: rule2 } = this;
     const setting = new import_obsidian3.Setting(parent);
     setting.settingEl.addClass("property-icons-cond-row");
     setting.infoEl.remove();
@@ -439,25 +473,25 @@ var RuleEditModal = class extends import_obsidian3.Modal {
     });
     setting.addExtraButton((b) => {
       b.setIcon("x").setTooltip(L.deleteConditionTooltip).onClick(async () => {
-        rule.conditions.splice(idx, 1);
-        if (rule.conditions.length === 0)
-          rule.conditions.push({ property: "", value: "" });
+        rule2.conditions.splice(idx, 1);
+        if (rule2.conditions.length === 0)
+          rule2.conditions.push({ property: "", value: "" });
         await this.persist();
         this.render();
       });
     });
   }
   renderIconPicker(parent) {
-    const { rule } = this;
+    const { rule: rule2 } = this;
     const grid = parent.createDiv({ cls: "property-icons-icon-grid" });
     const addOption = (ref, label, node) => {
       const opt = grid.createDiv({ cls: "property-icons-icon-option" });
       opt.setAttribute("aria-label", label);
-      if (rule.icon === ref)
+      if (rule2.icon === ref)
         opt.addClass("is-selected");
       opt.appendChild(node);
       opt.onClickEvent(async () => {
-        rule.icon = ref;
+        rule2.icon = ref;
         await this.persist();
         this.render();
       });
@@ -474,9 +508,105 @@ var RuleEditModal = class extends import_obsidian3.Modal {
   }
 };
 
+// src/transfer.ts
+var FORMAT = "property-icons-settings";
+var VERSION = 1;
+var ImportError = class extends Error {
+  constructor(reason, where = "") {
+    super(where ? `${reason}: ${where}` : reason);
+    this.reason = reason;
+    this.where = where;
+  }
+};
+function serializeSettings(settings, exportedAt) {
+  const { rules, customIcons, iconSize } = settings;
+  return JSON.stringify({ format: FORMAT, version: VERSION, exportedAt, settings: { rules, customIcons, iconSize } }, null, 2);
+}
+function parseSettings(text2) {
+  let file;
+  try {
+    file = JSON.parse(text2);
+  } catch (e) {
+    throw new ImportError("not-export");
+  }
+  if (typeof file !== "object" || file === null || file.format !== FORMAT)
+    throw new ImportError("not-export");
+  const { version, settings } = file;
+  if (typeof version !== "number")
+    fail("version");
+  if (version > VERSION)
+    throw new ImportError("newer-version");
+  const s = fields(settings, "settings");
+  const { iconSize } = s;
+  if (typeof iconSize !== "number" || !Number.isInteger(iconSize) || iconSize < ICON_SIZE_MIN || iconSize > ICON_SIZE_MAX) {
+    fail("settings.iconSize");
+  }
+  return {
+    rules: list(s.rules, "settings.rules").map((r, i) => rule(r, `settings.rules[${i}]`)),
+    customIcons: list(s.customIcons, "settings.customIcons").map((c, i) => customIcon(c, `settings.customIcons[${i}]`)),
+    iconSize
+  };
+}
+function fail(where) {
+  throw new ImportError("bad-content", where);
+}
+function fields(v, where) {
+  if (typeof v !== "object" || v === null || Array.isArray(v))
+    fail(where);
+  return v;
+}
+function list(v, where) {
+  if (!Array.isArray(v))
+    fail(where);
+  return v;
+}
+function text(v, where) {
+  if (typeof v !== "string")
+    fail(where);
+  return v;
+}
+function oneOf(v, allowed, where) {
+  if (!allowed.includes(v))
+    fail(where);
+  return v;
+}
+function rule(v, where) {
+  const r = fields(v, where);
+  const { enabled } = r;
+  if (typeof enabled !== "boolean")
+    fail(`${where}.enabled`);
+  const icon = text(r.icon, `${where}.icon`);
+  if (!/^(builtin|custom):./.test(icon))
+    fail(`${where}.icon`);
+  return {
+    id: text(r.id, `${where}.id`),
+    name: text(r.name, `${where}.name`),
+    op: oneOf(r.op, ["AND", "OR"], `${where}.op`),
+    conditions: list(r.conditions, `${where}.conditions`).map((c, i) => condition(c, `${where}.conditions[${i}]`)),
+    icon,
+    enabled
+  };
+}
+function condition(v, where) {
+  const c = fields(v, where);
+  const out = { property: text(c.property, `${where}.property`), value: text(c.value, `${where}.value`) };
+  if (c.match !== void 0)
+    out.match = oneOf(c.match, ["equals", "contains"], `${where}.match`);
+  return out;
+}
+function customIcon(v, where) {
+  const c = fields(v, where);
+  const dataUri = text(c.dataUri, `${where}.dataUri`);
+  if (!dataUri.startsWith("data:image/"))
+    fail(`${where}.dataUri`);
+  return { id: text(c.id, `${where}.id`), name: text(c.name, `${where}.name`), dataUri };
+}
+
 // src/settings.ts
 var CUSTOM_ICON_MAX_BYTES = 256 * 1024;
 var ACCEPTED_EXT = ["jpg", "jpeg", "png", "svg"];
+var ICON_FILE_ACCEPT = ".jpg,.jpeg,.png,.svg,image/*";
+var SETTINGS_FILE_ACCEPT = ".json,application/json";
 var renderNothing = () => {
 };
 function genId(prefix) {
@@ -527,7 +657,7 @@ var PropertyIconsSettingTab = class extends import_obsidian4.PluginSettingTab {
           {
             name: L.iconSize,
             desc: L.iconSizeDesc,
-            control: { type: "slider", key: "iconSize", min: 12, max: 24, step: 1, defaultValue: 16 }
+            control: { type: "slider", key: "iconSize", min: ICON_SIZE_MIN, max: ICON_SIZE_MAX, step: 1, defaultValue: 16 }
           }
         ]
       },
@@ -547,18 +677,18 @@ var PropertyIconsSettingTab = class extends import_obsidian4.PluginSettingTab {
           this.update();
           void this.persist();
         },
-        items: settings.rules.map((rule, i) => ({
-          name: rule.name || L.ruleDefaultName(i + 1),
-          desc: this.describeConditions(rule),
+        items: settings.rules.map((rule2, i) => ({
+          name: rule2.name || L.ruleDefaultName(i + 1),
+          desc: this.describeConditions(rule2),
           searchable: false,
-          render: (setting) => this.renderRuleRow(setting, rule)
+          render: (setting) => this.renderRuleRow(setting, rule2)
         }))
       },
       {
         type: "list",
         heading: L.customIcons,
         emptyState: L.noCustomIcons,
-        addItem: { name: L.uploadIcon, action: () => this.pickIconFile() },
+        addItem: { name: L.uploadIcon, action: () => this.pickFile(ICON_FILE_ACCEPT, (file) => void this.handleUpload(file)) },
         onDelete: (index) => this.deleteCustomIcon(index),
         items: settings.customIcons.map((icon) => ({
           name: icon.name,
@@ -571,35 +701,59 @@ var PropertyIconsSettingTab = class extends import_obsidian4.PluginSettingTab {
         }))
       },
       // list 头部没有 desc 位，格式/大小限制作为脚注放在图标列表下方
-      { name: "", desc: L.customIconsDesc, render: renderNothing }
+      { name: "", desc: L.customIconsDesc, render: renderNothing },
+      {
+        type: "group",
+        heading: L.transferHeading,
+        visible: import_obsidian4.Platform.isDesktopApp,
+        // 导出靠桌面端的系统保存窗口，手机端不提供
+        items: [
+          {
+            name: L.exportSettings,
+            desc: L.exportSettingsDesc,
+            render: (setting) => {
+              setting.addButton((b) => b.setButtonText(L.exportButton).onClick(() => this.exportSettings()));
+            }
+          },
+          {
+            name: L.importSettings,
+            desc: L.importSettingsDesc,
+            render: (setting) => {
+              setting.addButton(
+                (b) => b.setButtonText(L.importButton).onClick(() => this.pickFile(SETTINGS_FILE_ACCEPT, (file) => void this.importSettings(file)))
+              );
+            }
+          }
+        ]
+      }
     ];
   }
   // ── 规则组 ──
   /** 条件摘要：`prop = val 且 prop2 包含 val2`；无有效条件时提示尚未设置。 */
-  describeConditions(rule) {
+  describeConditions(rule2) {
     const L = t();
-    const parts = rule.conditions.filter((c) => c.property).map((c) => `${c.property} ${c.match === "contains" ? L.matchContains : L.matchEquals} ${c.value}`);
+    const parts = rule2.conditions.filter((c) => c.property).map((c) => `${c.property} ${c.match === "contains" ? L.matchContains : L.matchEquals} ${c.value}`);
     if (parts.length === 0)
       return L.noConditions;
-    return parts.join(rule.op === "AND" ? L.joinAnd : L.joinOr);
+    return parts.join(rule2.op === "AND" ? L.joinAnd : L.joinOr);
   }
   /** 列表行：名称前图标预览 + 启用开关 + 编辑按钮 + 复制按钮（框架另行追加删除 X 与拖拽把手）。 */
-  renderRuleRow(setting, rule) {
+  renderRuleRow(setting, rule2) {
     const L = t();
-    const preview = iconPreviewEl(rule.icon, this.plugin.settings.customIcons);
+    const preview = iconPreviewEl(rule2.icon, this.plugin.settings.customIcons);
     if (preview)
       setting.nameEl.prepend(preview);
     setting.addToggle((tg) => {
-      tg.setTooltip(L.enableRuleTooltip).setValue(rule.enabled).onChange(async (v) => {
-        rule.enabled = v;
+      tg.setTooltip(L.enableRuleTooltip).setValue(rule2.enabled).onChange(async (v) => {
+        rule2.enabled = v;
         await this.persist();
       });
     });
     setting.addExtraButton((b) => {
-      b.setIcon("lucide-pencil").setTooltip(L.editRule).onClick(() => this.openRuleModal(rule));
+      b.setIcon("lucide-pencil").setTooltip(L.editRule).onClick(() => this.openRuleModal(rule2));
     });
     setting.addExtraButton((b) => {
-      b.setIcon("lucide-copy").setTooltip(L.duplicateRule).onClick(() => void this.duplicateRule(rule));
+      b.setIcon("lucide-copy").setTooltip(L.duplicateRule).onClick(() => void this.duplicateRule(rule2));
     });
   }
   createRule() {
@@ -615,23 +769,23 @@ var PropertyIconsSettingTab = class extends import_obsidian4.PluginSettingTab {
     });
   }
   /** 复制一条规则组，放在原规则组的正下方。 */
-  duplicateRule(rule) {
+  duplicateRule(rule2) {
     const L = t();
-    const index = this.plugin.settings.rules.indexOf(rule);
-    const sourceName = rule.name || L.ruleDefaultName(index + 1);
+    const index = this.plugin.settings.rules.indexOf(rule2);
+    const sourceName = rule2.name || L.ruleDefaultName(index + 1);
     return this.insertRule(index + 1, {
-      ...rule,
+      ...rule2,
       id: genId("rule"),
       name: this.freeName((n) => L.ruleCopyName(sourceName, n), 1),
-      conditions: rule.conditions.map((c) => ({ ...c }))
+      conditions: rule2.conditions.map((c) => ({ ...c }))
     });
   }
   /** 把新规则组放到 index 位置，存盘、重绘列表，并直接打开编辑弹窗。 */
-  async insertRule(index, rule) {
-    this.plugin.settings.rules.splice(index, 0, rule);
+  async insertRule(index, rule2) {
+    this.plugin.settings.rules.splice(index, 0, rule2);
     await this.persist();
     this.update();
-    this.openRuleModal(rule);
+    this.openRuleModal(rule2);
   }
   /** 从 nameOf(from) 起取第一个没被占用的名称：框架拿名称当列表行的标识，重名会报错。 */
   freeName(nameOf, from) {
@@ -641,17 +795,16 @@ var PropertyIconsSettingTab = class extends import_obsidian4.PluginSettingTab {
       n++;
     return nameOf(n);
   }
-  openRuleModal(rule) {
-    new RuleEditModal(this.app, this.plugin, rule, () => this.update()).open();
+  openRuleModal(rule2) {
+    new RuleEditModal(this.app, this.plugin, rule2, () => this.update()).open();
   }
-  // ── 自定义图标 ──
   /**
-   * 点 + 时在设置页里临时放一个隐藏的 file input 触发系统选图框，选完或取消后移除。
+   * 让用户选一个文件（上传图标、导入配置共用）：在设置页里临时放一个隐藏的 file input 触发系统选择框，选完或取消后移除。
    * input 必须挂在设置页里：Obsidian 1.15 起设置是独立窗口，用全局 createEl 建出来的 input 属于主窗口，
-   * 拿不到这次点击的用户激活，选图框会被浏览器拦掉（点了没反应）。
+   * 拿不到这次点击的用户激活，选择框会被浏览器拦掉（点了没反应）。
    */
-  pickIconFile() {
-    const input = this.containerEl.createEl("input", { type: "file", attr: { accept: ".jpg,.jpeg,.png,.svg,image/*" } });
+  pickFile(accept, onPicked) {
+    const input = this.containerEl.createEl("input", { type: "file", attr: { accept } });
     input.hide();
     input.addEventListener("cancel", () => input.remove());
     input.addEventListener("change", () => {
@@ -659,15 +812,16 @@ var PropertyIconsSettingTab = class extends import_obsidian4.PluginSettingTab {
       const file = (_a = input.files) == null ? void 0 : _a[0];
       input.remove();
       if (file)
-        void this.handleUpload(file);
+        onPicked(file);
     });
     input.click();
   }
+  // ── 自定义图标 ──
   deleteCustomIcon(index) {
     const [removed] = this.plugin.settings.customIcons.splice(index, 1);
-    for (const rule of this.plugin.settings.rules) {
-      if (rule.icon === `custom:${removed.id}`)
-        rule.icon = `builtin:${BUILTIN_ICONS[0].id}`;
+    for (const rule2 of this.plugin.settings.rules) {
+      if (rule2.icon === `custom:${removed.id}`)
+        rule2.icon = `builtin:${BUILTIN_ICONS[0].id}`;
     }
     this.update();
     void this.persist();
@@ -703,6 +857,42 @@ var PropertyIconsSettingTab = class extends import_obsidian4.PluginSettingTab {
     });
     await this.persist();
     this.update();
+  }
+  // ── 导入 / 导出 ──
+  /** 把整份配置存成一个 JSON 文件：在设置页里放一个临时下载链接并点击，存到哪由系统保存窗口决定。 */
+  exportSettings() {
+    const json = serializeSettings(this.plugin.settings, (/* @__PURE__ */ new Date()).toISOString());
+    const url = URL.createObjectURL(new Blob([json], { type: "application/json" }));
+    const name = `property-icons-settings-${(0, import_obsidian4.moment)().format("YYYY-MM-DD")}.json`;
+    const link = this.containerEl.createEl("a", { href: url, attr: { download: name } });
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  }
+  /** 读导出文件并整体替换当前配置；本地已有规则组或自定义图标时先确认。文件不对就提示原因，不改动任何东西。 */
+  async importSettings(file) {
+    const L = t();
+    let imported;
+    try {
+      imported = parseSettings(await file.text());
+    } catch (e) {
+      if (!(e instanceof ImportError))
+        throw e;
+      new import_obsidian4.Notice(L.importFailed[e.reason](e.where));
+      return;
+    }
+    const replace = async () => {
+      this.plugin.settings = imported;
+      await this.persist();
+      this.update();
+      new import_obsidian4.Notice(L.importDone(imported.rules.length, imported.customIcons.length));
+    };
+    const current2 = this.plugin.settings;
+    if (current2.rules.length + current2.customIcons.length === 0) {
+      await replace();
+      return;
+    }
+    new import_obsidian4.ConfirmationModal(this.app).setTitle(L.importConfirmTitle).setContent(L.importConfirmBody).addButton((b) => b.setButtonText(L.importConfirmButton).setWarning().onClick(replace)).addCancelButton().open();
   }
 };
 

@@ -1,5 +1,7 @@
 // English strings (default / fallback language).
 
+import type { ImportFailure } from '../transfer';
+
 export interface Messages {
   heading: string;
   headingDesc: string;
@@ -37,6 +39,19 @@ export interface Messages {
   unsupportedFormat: (ext: string, accepted: string) => string;
   imageTooBig: (kb: number) => string;
   readImageFailed: string;
+  transferHeading: string;
+  exportSettings: string;
+  exportSettingsDesc: string;
+  exportButton: string;
+  importSettings: string;
+  importSettingsDesc: string;
+  importButton: string;
+  importConfirmTitle: string;
+  importConfirmBody: string;
+  importConfirmButton: string;
+  importDone: (rules: number, icons: number) => string;
+  /** 导入失败的提示，按原因取；where 是文件里出错的位置，只有 bad-content 用到。 */
+  importFailed: Record<ImportFailure, (where: string) => string>;
 }
 
 export const en: Messages = {
@@ -76,4 +91,20 @@ export const en: Messages = {
   unsupportedFormat: (ext, accepted) => `Unsupported format: .${ext} (only ${accepted})`,
   imageTooBig: (kb) => `Image too large (${kb}KB); the limit is 256KB`,
   readImageFailed: 'Failed to read the image',
+  transferHeading: 'Import / export',
+  exportSettings: 'Export settings',
+  exportSettingsDesc: 'Save all rule groups, custom icons and the icon size to one JSON file that can be imported on another device.',
+  exportButton: 'Export',
+  importSettings: 'Import settings',
+  importSettingsDesc: 'Load an exported JSON file. It replaces all current rule groups, custom icons and the icon size.',
+  importButton: 'Import',
+  importConfirmTitle: 'Replace current settings?',
+  importConfirmBody: 'Importing replaces all current rule groups and custom icons. This cannot be undone. Continue?',
+  importConfirmButton: 'Import and replace',
+  importDone: (rules, icons) => `Imported ${rules} rule groups and ${icons} custom icons`,
+  importFailed: {
+    'not-export': () => 'This is not a settings file exported by this plugin',
+    'newer-version': () => 'This file was exported by a newer version of the plugin. Update the plugin, then import again.',
+    'bad-content': (where) => `The settings file is invalid: ${where}`,
+  },
 };

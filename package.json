@@ -1,11 +1,12 @@
 {
   "name": "property-icons",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Obsidian plugin: badge icons in the file explorer driven by note property rules.",
   "main": "main.js",
   "scripts": {
     "dev": "node esbuild.config.mjs",
-    "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production"
+    "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
+    "test": "esbuild test/*.test.ts --bundle --platform=node --format=esm --outdir=test/.build --out-extension:.js=.mjs --log-level=warning && node --test test/.build/*.mjs"
   },
   "keywords": [
     "obsidian",

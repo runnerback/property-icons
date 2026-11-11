@@ -1,13 +1,16 @@
-import { App, Notice, PluginSettingTab } from 'obsidian';
+import { App, ConfirmationModal, Notice, Platform, PluginSettingTab, moment } from 'obsidian';
 import type { Setting, SettingDefinitionItem } from 'obsidian';
 import type PropertyIconsPlugin from './main';
-import { CustomIcon, Rule } from './types';
+import { CustomIcon, ICON_SIZE_MAX, ICON_SIZE_MIN, PropertyIconsSettings, Rule } from './types';
 import { BUILTIN_ICONS, builtinSvgEl } from './icons';
 import { t } from './i18n';
 import { RuleEditModal } from './ruleModal';
+import { ImportError, parseSettings, serializeSettings } from './transfer';
 
 const CUSTOM_ICON_MAX_BYTES = 256 * 1024; // 单张自定义图标上限 256KB（存 data.json，别撑太大）
 const ACCEPTED_EXT = ['jpg', 'jpeg', 'png', 'svg'];
+const ICON_FILE_ACCEPT = '.jpg,.jpeg,.png,.svg,image/*';
+const SETTINGS_FILE_ACCEPT = '.json,application/json';
 
 /** 只有说明文字的行要带上这个空 render：Obsidian 1.15 起，既无名称也无控件 / render 的行不再渲染。 */
 const renderNothing = (): void => {};
@@ -37,7 +40,7 @@ function iconPreviewEl(ref: string, customIcons: CustomIcon[]): HTMLElement | nu
 /**
  * 设置页：Obsidian 1.13 声明式 Settings API（getSettingDefinitions）。
  * 结构：顶部 group（说明 + 图标大小滑块）→ 规则组 list（增/删/拖拽排序，行内启用开关 + 编辑、复制按钮，
- * 详细编辑在 RuleEditModal）→ 自定义图标 list（上传/删除）→ 图标格式说明脚注。
+ * 详细编辑在 RuleEditModal）→ 自定义图标 list（上传/删除）→ 图标格式说明脚注 → 导入 / 导出 group（仅桌面端）。
  * 增删改后统一 persist()（保存 + 刷新文件树），结构变化再 update() 重渲染（框架重绘时保留滚动位置）。
  */
 export class PropertyIconsSettingTab extends PluginSettingTab {
@@ -70,7 +73,7 @@ export class PropertyIconsSettingTab extends PluginSettingTab {
           {
             name: L.iconSize,
             desc: L.iconSizeDesc,
-            control: { type: 'slider', key: 'iconSize', min: 12, max: 24, step: 1, defaultValue: 16 },
+            control: { type: 'slider', key: 'iconSize', min: ICON_SIZE_MIN, max: ICON_SIZE_MAX, step: 1, defaultValue: 16 },
           },
         ],
       },
@@ -101,7 +104,7 @@ export class PropertyIconsSettingTab extends PluginSettingTab {
         type: 'list',
         heading: L.customIcons,
         emptyState: L.noCustomIcons,
-        addItem: { name: L.uploadIcon, action: () => this.pickIconFile() },
+        addItem: { name: L.uploadIcon, action: () => this.pickFile(ICON_FILE_ACCEPT, (file) => void this.handleUpload(file)) },
         onDelete: (index) => this.deleteCustomIcon(index),
         items: settings.customIcons.map((icon) => ({
           name: icon.name,
@@ -114,6 +117,29 @@ export class PropertyIconsSettingTab extends PluginSettingTab {
       },
       // list 头部没有 desc 位，格式/大小限制作为脚注放在图标列表下方
       { name: '', desc: L.customIconsDesc, render: renderNothing },
+      {
+        type: 'group',
+        heading: L.transferHeading,
+        visible: Platform.isDesktopApp, // 导出靠桌面端的系统保存窗口，手机端不提供
+        items: [
+          {
+            name: L.exportSettings,
+            desc: L.exportSettingsDesc,
+            render: (setting: Setting) => {
+              setting.addButton((b) => b.setButtonText(L.exportButton).onClick(() => this.exportSettings()));
+            },
+          },
+          {
+            name: L.importSettings,
+            desc: L.importSettingsDesc,
+            render: (setting: Setting) => {
+              setting.addButton((b) =>
+                b.setButtonText(L.importButton).onClick(() => this.pickFile(SETTINGS_FILE_ACCEPT, (file) => void this.importSettings(file))),
+              );
+            },
+          },
+        ],
+      },
     ];
   }
 
@@ -201,24 +227,24 @@ export class PropertyIconsSettingTab extends PluginSettingTab {
     new RuleEditModal(this.app, this.plugin, rule, () => this.update()).open();
   }
 
-  // ── 自定义图标 ──
-
   /**
-   * 点 + 时在设置页里临时放一个隐藏的 file input 触发系统选图框，选完或取消后移除。
+   * 让用户选一个文件（上传图标、导入配置共用）：在设置页里临时放一个隐藏的 file input 触发系统选择框，选完或取消后移除。
    * input 必须挂在设置页里：Obsidian 1.15 起设置是独立窗口，用全局 createEl 建出来的 input 属于主窗口，
-   * 拿不到这次点击的用户激活，选图框会被浏览器拦掉（点了没反应）。
+   * 拿不到这次点击的用户激活，选择框会被浏览器拦掉（点了没反应）。
    */
-  private pickIconFile(): void {
-    const input = this.containerEl.createEl('input', { type: 'file', attr: { accept: '.jpg,.jpeg,.png,.svg,image/*' } });
+  private pickFile(accept: string, onPicked: (file: File) => void): void {
+    const input = this.containerEl.createEl('input', { type: 'file', attr: { accept } });
     input.hide();
     input.addEventListener('cancel', () => input.remove());
     input.addEventListener('change', () => {
       const file = input.files?.[0];
       input.remove();
-      if (file) void this.handleUpload(file);
+      if (file) onPicked(file);
     });
     input.click();
   }
+
+  // ── 自定义图标 ──
 
   private deleteCustomIcon(index: number): void {
     const [removed] = this.plugin.settings.customIcons.splice(index, 1);
@@ -259,5 +285,48 @@ export class PropertyIconsSettingTab extends PluginSettingTab {
     });
     await this.persist();
     this.update();
+  }
+
+  // ── 导入 / 导出 ──
+
+  /** 把整份配置存成一个 JSON 文件：在设置页里放一个临时下载链接并点击，存到哪由系统保存窗口决定。 */
+  private exportSettings(): void {
+    const json = serializeSettings(this.plugin.settings, new Date().toISOString());
+    const url = URL.createObjectURL(new Blob([json], { type: 'application/json' }));
+    const name = `property-icons-settings-${moment().format('YYYY-MM-DD')}.json`;
+    const link = this.containerEl.createEl('a', { href: url, attr: { download: name } });
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  /** 读导出文件并整体替换当前配置；本地已有规则组或自定义图标时先确认。文件不对就提示原因，不改动任何东西。 */
+  private async importSettings(file: File): Promise<void> {
+    const L = t();
+    let imported: PropertyIconsSettings;
+    try {
+      imported = parseSettings(await file.text());
+    } catch (e) {
+      if (!(e instanceof ImportError)) throw e;
+      new Notice(L.importFailed[e.reason](e.where));
+      return;
+    }
+    const replace = async (): Promise<void> => {
+      this.plugin.settings = imported;
+      await this.persist();
+      this.update();
+      new Notice(L.importDone(imported.rules.length, imported.customIcons.length));
+    };
+    const current = this.plugin.settings;
+    if (current.rules.length + current.customIcons.length === 0) {
+      await replace();
+      return;
+    }
+    new ConfirmationModal(this.app)
+      .setTitle(L.importConfirmTitle)
+      .setContent(L.importConfirmBody)
+      .addButton((b) => b.setButtonText(L.importConfirmButton).setWarning().onClick(replace))
+      .addCancelButton()
+      .open();
   }
 }

@@ -46,6 +46,10 @@ export interface PropertyIconsSettings {
   iconSize: number;
 }
 
+/** 徽标像素尺寸的取值范围（设置页滑块与导入校验共用）。 */
+export const ICON_SIZE_MIN = 12;
+export const ICON_SIZE_MAX = 24;
+
 export const DEFAULT_SETTINGS: PropertyIconsSettings = {
   rules: [],
   customIcons: [],
