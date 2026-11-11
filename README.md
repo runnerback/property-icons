@@ -13,7 +13,7 @@ Your notes already carry their status in properties — `publish_status: done`, 
 - **Rule groups** — create any number of rule groups. Each group is a set of `property = value` (exact) or `property contains value` (substring; arrays match by any element) conditions.
 - **AND / OR per group** — choose whether *all* conditions must match (AND) or *any* (OR). One operator per group, kept simple.
 - **Multiple icons** — a file that matches several groups shows several badges, in order.
-- **Built-in brand icons** — bilibili, 小红书 (Xiaohongshu), YouTube, 抖音 (Douyin), 微博 (Weibo), WeChat, X, Instagram.
+- **Built-in brand icons** — bilibili, 小红书 (Xiaohongshu), YouTube, 抖音 (Douyin), 快手 (Kuaishou), 微博 (Weibo), 知乎 (Zhihu), WeChat, X, Instagram.
 - **Custom icons** — upload your own image (`jpg` / `jpeg` / `png` / `svg`) and use it as a badge.
 - **Live** — badges update instantly when a note's properties change, and survive file-tree scrolling/expanding.
 
@@ -21,7 +21,7 @@ Your notes already carry their status in properties — `publish_status: done`, 
 
 1. Enable the plugin, open **Settings → Property Icons**.
 2. Click **+** in the **Rule groups** list — the new group opens in an edit dialog.
-3. Add one or more conditions (e.g. property `publish_status`, value `done`), pick **且/或 (AND/OR)**, and choose an icon. Reorder or delete groups from the list.
+3. Add one or more conditions (e.g. property `publish_status`, value `done`), pick **且/或 (AND/OR)**, and choose an icon. Reorder or delete groups from the list; the **duplicate** button on a row creates a copy right below it and opens it for editing, so a similar rule is only a tweak away.
 4. Notes whose frontmatter matches now show the icon before their name in the file explorer.
 
 Example — show the WeChat icon on notes synced to a WeChat draft:
@@ -50,6 +50,7 @@ This plugin was inspired by [Mark as Read / Explorer Property Attributes](https:
 
 ## Changelog
 
+- v0.2.1 (2026-11-11): each row in the rule group list has a **duplicate** button — the copy is placed right below the original and opens for editing; the edit dialog no longer jumps back to the top after adding / deleting a condition or picking an icon when it is tall enough to scroll; default names of new rule groups no longer collide with existing ones; new built-in icons for **快手 (Kuaishou)** and **知乎 (Zhihu)**, and the X icon is now the current logo, drawn in the theme text color.
 - v0.2.0 (2026-09-07): settings tab migrated to the Obsidian 1.13 declarative Settings API (`getSettingDefinitions`); rule groups are edited in a dialog and can be reordered by drag. Requires Obsidian ≥ 1.13.0.
 - v0.1.x: initial releases (Obsidian ≥ 1.4.0).
 

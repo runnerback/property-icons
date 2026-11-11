@@ -36,7 +36,8 @@ export class RuleEditModal extends Modal {
   }
 
   private render(): void {
-    const { contentEl, rule } = this;
+    const { contentEl, modalEl, rule } = this;
+    const scrollTop = modalEl.scrollTop; // 条件多时弹窗可滚动，清空重绘会回到顶部，画完还原
     contentEl.empty();
     const L = t();
 
@@ -89,6 +90,7 @@ export class RuleEditModal extends Modal {
     const iconLabel = contentEl.createDiv({ cls: 'property-icons-icon-label', text: L.iconLabel });
     iconLabel.setAttr('aria-hidden', 'true');
     this.renderIconPicker(contentEl);
+    modalEl.scrollTop = scrollTop;
   }
 
   private renderConditionRow(parent: HTMLElement, cond: Condition, idx: number): void {

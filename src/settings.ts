@@ -33,9 +33,9 @@ function iconPreviewEl(ref: string, customIcons: CustomIcon[]): HTMLElement | nu
 
 /**
  * 设置页：Obsidian 1.13 声明式 Settings API（getSettingDefinitions）。
- * 结构：顶部 group（说明 + 图标大小滑块）→ 规则组 list（增/删/拖拽排序，行内启用开关 + 编辑按钮，
+ * 结构：顶部 group（说明 + 图标大小滑块）→ 规则组 list（增/删/拖拽排序，行内启用开关 + 编辑、复制按钮，
  * 详细编辑在 RuleEditModal）→ 自定义图标 list（上传/删除）→ 图标格式说明脚注。
- * 增删改后统一 persist()（保存 + 刷新文件树），结构变化再 update() 重渲染。
+ * 增删改后统一 persist()（保存 + 刷新文件树），结构变化再 update() 重渲染（框架重绘时保留滚动位置）。
  */
 export class PropertyIconsSettingTab extends PluginSettingTab {
   constructor(app: App, private plugin: PropertyIconsPlugin) {
@@ -126,7 +126,7 @@ export class PropertyIconsSettingTab extends PluginSettingTab {
     return parts.join(rule.op === 'AND' ? L.joinAnd : L.joinOr);
   }
 
-  /** 列表行：名称前图标预览 + 启用开关 + 编辑按钮（框架另行追加删除 X 与拖拽把手）。 */
+  /** 列表行：名称前图标预览 + 启用开关 + 编辑按钮 + 复制按钮（框架另行追加删除 X 与拖拽把手）。 */
   private renderRuleRow(setting: Setting, rule: Rule): void {
     const L = t();
     const preview = iconPreviewEl(rule.icon, this.plugin.settings.customIcons);
@@ -145,22 +145,53 @@ export class PropertyIconsSettingTab extends PluginSettingTab {
         .setTooltip(L.editRule)
         .onClick(() => this.openRuleModal(rule));
     });
+    setting.addExtraButton((b) => {
+      b.setIcon('lucide-copy')
+        .setTooltip(L.duplicateRule)
+        .onClick(() => void this.duplicateRule(rule));
+    });
   }
 
-  private async createRule(): Promise<void> {
+  private createRule(): Promise<void> {
     const L = t();
-    const rule: Rule = {
+    const rules = this.plugin.settings.rules;
+    return this.insertRule(rules.length, {
       id: genId('rule'),
-      name: L.ruleDefaultName(this.plugin.settings.rules.length + 1),
+      name: this.freeName(L.ruleDefaultName, rules.length + 1),
       op: 'AND',
       conditions: [{ property: '', value: '' }],
       icon: `builtin:${BUILTIN_ICONS[0].id}`,
       enabled: true,
-    };
-    this.plugin.settings.rules.push(rule);
+    });
+  }
+
+  /** 复制一条规则组，放在原规则组的正下方。 */
+  private duplicateRule(rule: Rule): Promise<void> {
+    const L = t();
+    const index = this.plugin.settings.rules.indexOf(rule);
+    const sourceName = rule.name || L.ruleDefaultName(index + 1);
+    return this.insertRule(index + 1, {
+      ...rule,
+      id: genId('rule'),
+      name: this.freeName((n) => L.ruleCopyName(sourceName, n), 1),
+      conditions: rule.conditions.map((c) => ({ ...c })),
+    });
+  }
+
+  /** 把新规则组放到 index 位置，存盘、重绘列表，并直接打开编辑弹窗。 */
+  private async insertRule(index: number, rule: Rule): Promise<void> {
+    this.plugin.settings.rules.splice(index, 0, rule);
     await this.persist();
     this.update();
     this.openRuleModal(rule);
+  }
+
+  /** 从 nameOf(from) 起取第一个没被占用的名称：框架拿名称当列表行的标识，重名会报错。 */
+  private freeName(nameOf: (n: number) => string, from: number): string {
+    const taken = new Set(this.plugin.settings.rules.map((r) => r.name));
+    let n = from;
+    while (taken.has(nameOf(n))) n++;
+    return nameOf(n);
   }
 
   private openRuleModal(rule: Rule): void {

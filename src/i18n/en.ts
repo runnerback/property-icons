@@ -9,7 +9,10 @@ export interface Messages {
   noRules: string;
   addRuleGroup: string;
   editRule: string;
+  duplicateRule: string;
   ruleDefaultName: (n: number) => string;
+  /** 复制出来的规则组名称；n 从 1 起，同名已存在时递增。 */
+  ruleCopyName: (name: string, n: number) => string;
   ruleName: string;
   ruleNamePlaceholder: string;
   enableRuleTooltip: string;
@@ -46,7 +49,9 @@ export const en: Messages = {
   noRules: 'No rule groups yet. Click + to add one.',
   addRuleGroup: 'Add rule group',
   editRule: 'Edit rule group',
+  duplicateRule: 'Duplicate rule group',
   ruleDefaultName: (n) => `Rule ${n}`,
+  ruleCopyName: (name, n) => (n === 1 ? `${name} copy` : `${name} copy ${n}`),
   ruleName: 'Name',
   ruleNamePlaceholder: 'Rule name',
   enableRuleTooltip: 'Enable this rule',
