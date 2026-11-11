@@ -9,6 +9,9 @@ import { RuleEditModal } from './ruleModal';
 const CUSTOM_ICON_MAX_BYTES = 256 * 1024; // 单张自定义图标上限 256KB（存 data.json，别撑太大）
 const ACCEPTED_EXT = ['jpg', 'jpeg', 'png', 'svg'];
 
+/** 只有说明文字的行要带上这个空 render：Obsidian 1.15 起，既无名称也无控件 / render 的行不再渲染。 */
+const renderNothing = (): void => {};
+
 function genId(prefix: string): string {
   return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
 }
@@ -63,7 +66,7 @@ export class PropertyIconsSettingTab extends PluginSettingTab {
         heading: L.heading,
         items: [
           // 无 control 的说明行：只承载 headingDesc
-          { name: '', desc: L.headingDesc, searchable: false },
+          { name: '', desc: L.headingDesc, searchable: false, render: renderNothing },
           {
             name: L.iconSize,
             desc: L.iconSizeDesc,
@@ -110,7 +113,7 @@ export class PropertyIconsSettingTab extends PluginSettingTab {
         })),
       },
       // list 头部没有 desc 位，格式/大小限制作为脚注放在图标列表下方
-      { name: '', desc: L.customIconsDesc },
+      { name: '', desc: L.customIconsDesc, render: renderNothing },
     ];
   }
 
@@ -200,11 +203,18 @@ export class PropertyIconsSettingTab extends PluginSettingTab {
 
   // ── 自定义图标 ──
 
-  /** 点 + 时临时建一个 file input 触发系统选图框（无需挂到 DOM）。 */
+  /**
+   * 点 + 时在设置页里临时放一个隐藏的 file input 触发系统选图框，选完或取消后移除。
+   * input 必须挂在设置页里：Obsidian 1.15 起设置是独立窗口，用全局 createEl 建出来的 input 属于主窗口，
+   * 拿不到这次点击的用户激活，选图框会被浏览器拦掉（点了没反应）。
+   */
   private pickIconFile(): void {
-    const input = createEl('input', { type: 'file', attr: { accept: '.jpg,.jpeg,.png,.svg,image/*' } });
+    const input = this.containerEl.createEl('input', { type: 'file', attr: { accept: '.jpg,.jpeg,.png,.svg,image/*' } });
+    input.hide();
+    input.addEventListener('cancel', () => input.remove());
     input.addEventListener('change', () => {
       const file = input.files?.[0];
+      input.remove();
       if (file) void this.handleUpload(file);
     });
     input.click();

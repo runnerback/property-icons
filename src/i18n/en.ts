@@ -72,7 +72,7 @@ export const en: Messages = {
   customIcons: 'Custom icons',
   customIconsDesc: 'Upload your own image as an icon. Supports jpg / jpeg / png / svg (≤ 256KB each).',
   uploadIcon: 'Upload icon',
-  noCustomIcons: 'No custom icons yet',
+  noCustomIcons: 'No custom icons yet. Click + to upload one.',
   unsupportedFormat: (ext, accepted) => `Unsupported format: .${ext} (only ${accepted})`,
   imageTooBig: (kb) => `Image too large (${kb}KB); the limit is 256KB`,
   readImageFailed: 'Failed to read the image',

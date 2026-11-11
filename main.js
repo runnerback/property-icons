@@ -287,7 +287,7 @@ var en = {
   customIcons: "Custom icons",
   customIconsDesc: "Upload your own image as an icon. Supports jpg / jpeg / png / svg (\u2264 256KB each).",
   uploadIcon: "Upload icon",
-  noCustomIcons: "No custom icons yet",
+  noCustomIcons: "No custom icons yet. Click + to upload one.",
   unsupportedFormat: (ext, accepted) => `Unsupported format: .${ext} (only ${accepted})`,
   imageTooBig: (kb) => `Image too large (${kb}KB); the limit is 256KB`,
   readImageFailed: "Failed to read the image"
@@ -326,7 +326,7 @@ var zh = {
   customIcons: "\u81EA\u5B9A\u4E49\u56FE\u6807",
   customIconsDesc: "\u4E0A\u4F20\u81EA\u5DF1\u7684\u56FE\u7247\u4F5C\u4E3A\u56FE\u6807\uFF0C\u652F\u6301 jpg / jpeg / png / svg\uFF08\u5355\u5F20 \u2264 256KB\uFF09\u3002",
   uploadIcon: "\u4E0A\u4F20\u56FE\u6807",
-  noCustomIcons: "\u6682\u65E0\u81EA\u5B9A\u4E49\u56FE\u6807",
+  noCustomIcons: "\u6682\u65E0\u81EA\u5B9A\u4E49\u56FE\u6807\uFF0C\u70B9\u51FB + \u4E0A\u4F20",
   unsupportedFormat: (ext, accepted) => `\u4E0D\u652F\u6301\u7684\u683C\u5F0F\uFF1A.${ext}\uFF08\u4EC5\u652F\u6301 ${accepted}\uFF09`,
   imageTooBig: (kb) => `\u56FE\u7247\u8FC7\u5927\uFF08${kb}KB\uFF09\uFF0C\u4E0A\u9650 256KB`,
   readImageFailed: "\u8BFB\u53D6\u56FE\u7247\u5931\u8D25"
@@ -477,6 +477,8 @@ var RuleEditModal = class extends import_obsidian3.Modal {
 // src/settings.ts
 var CUSTOM_ICON_MAX_BYTES = 256 * 1024;
 var ACCEPTED_EXT = ["jpg", "jpeg", "png", "svg"];
+var renderNothing = () => {
+};
 function genId(prefix) {
   return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
 }
@@ -521,7 +523,7 @@ var PropertyIconsSettingTab = class extends import_obsidian4.PluginSettingTab {
         heading: L.heading,
         items: [
           // 无 control 的说明行：只承载 headingDesc
-          { name: "", desc: L.headingDesc, searchable: false },
+          { name: "", desc: L.headingDesc, searchable: false, render: renderNothing },
           {
             name: L.iconSize,
             desc: L.iconSizeDesc,
@@ -569,7 +571,7 @@ var PropertyIconsSettingTab = class extends import_obsidian4.PluginSettingTab {
         }))
       },
       // list 头部没有 desc 位，格式/大小限制作为脚注放在图标列表下方
-      { name: "", desc: L.customIconsDesc }
+      { name: "", desc: L.customIconsDesc, render: renderNothing }
     ];
   }
   // ── 规则组 ──
@@ -643,12 +645,19 @@ var PropertyIconsSettingTab = class extends import_obsidian4.PluginSettingTab {
     new RuleEditModal(this.app, this.plugin, rule, () => this.update()).open();
   }
   // ── 自定义图标 ──
-  /** 点 + 时临时建一个 file input 触发系统选图框（无需挂到 DOM）。 */
+  /**
+   * 点 + 时在设置页里临时放一个隐藏的 file input 触发系统选图框，选完或取消后移除。
+   * input 必须挂在设置页里：Obsidian 1.15 起设置是独立窗口，用全局 createEl 建出来的 input 属于主窗口，
+   * 拿不到这次点击的用户激活，选图框会被浏览器拦掉（点了没反应）。
+   */
   pickIconFile() {
-    const input = createEl("input", { type: "file", attr: { accept: ".jpg,.jpeg,.png,.svg,image/*" } });
+    const input = this.containerEl.createEl("input", { type: "file", attr: { accept: ".jpg,.jpeg,.png,.svg,image/*" } });
+    input.hide();
+    input.addEventListener("cancel", () => input.remove());
     input.addEventListener("change", () => {
       var _a;
       const file = (_a = input.files) == null ? void 0 : _a[0];
+      input.remove();
       if (file)
         void this.handleUpload(file);
     });

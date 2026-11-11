@@ -35,7 +35,7 @@ export const zh: Messages = {
   customIcons: '自定义图标',
   customIconsDesc: '上传自己的图片作为图标，支持 jpg / jpeg / png / svg（单张 ≤ 256KB）。',
   uploadIcon: '上传图标',
-  noCustomIcons: '暂无自定义图标',
+  noCustomIcons: '暂无自定义图标，点击 + 上传',
   unsupportedFormat: (ext, accepted) => `不支持的格式：.${ext}（仅支持 ${accepted}）`,
   imageTooBig: (kb) => `图片过大（${kb}KB），上限 256KB`,
   readImageFailed: '读取图片失败',
