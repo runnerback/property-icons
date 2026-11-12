@@ -51,6 +51,8 @@ This plugin was inspired by [Mark as Read / Explorer Property Attributes](https:
 
 ## Changelog
 
+- v0.2.4 (2026-11-12)
+  - The export file name no longer uses `moment()` for its date, which the community directory code scan flagged; no change in behavior.
 - v0.2.3 (2026-11-12)
   - New built-in icon for **Reddit**.
 - v0.2.2 (2026-11-11)

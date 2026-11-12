@@ -867,7 +867,9 @@ var PropertyIconsSettingTab = class extends import_obsidian4.PluginSettingTab {
   exportSettings() {
     const json = serializeSettings(this.plugin.settings, (/* @__PURE__ */ new Date()).toISOString());
     const url = URL.createObjectURL(new Blob([json], { type: "application/json" }));
-    const name = `property-icons-settings-${(0, import_obsidian4.moment)().format("YYYY-MM-DD")}.json`;
+    const now = /* @__PURE__ */ new Date();
+    const day = [now.getFullYear(), now.getMonth() + 1, now.getDate()].map((n) => String(n).padStart(2, "0")).join("-");
+    const name = `property-icons-settings-${day}.json`;
     const link = this.containerEl.createEl("a", { href: url, attr: { download: name } });
     link.click();
     link.remove();

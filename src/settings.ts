@@ -1,4 +1,4 @@
-import { App, ConfirmationModal, Notice, Platform, PluginSettingTab, moment } from 'obsidian';
+import { App, ConfirmationModal, Notice, Platform, PluginSettingTab } from 'obsidian';
 import type { Setting, SettingDefinitionItem } from 'obsidian';
 import type PropertyIconsPlugin from './main';
 import { CustomIcon, ICON_SIZE_MAX, ICON_SIZE_MIN, PropertyIconsSettings, Rule } from './types';
@@ -293,7 +293,9 @@ export class PropertyIconsSettingTab extends PluginSettingTab {
   private exportSettings(): void {
     const json = serializeSettings(this.plugin.settings, new Date().toISOString());
     const url = URL.createObjectURL(new Blob([json], { type: 'application/json' }));
-    const name = `property-icons-settings-${moment().format('YYYY-MM-DD')}.json`;
+    const now = new Date();
+    const day = [now.getFullYear(), now.getMonth() + 1, now.getDate()].map((n) => String(n).padStart(2, '0')).join('-');
+    const name = `property-icons-settings-${day}.json`;
     const link = this.containerEl.createEl('a', { href: url, attr: { download: name } });
     link.click();
     link.remove();
