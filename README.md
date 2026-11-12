@@ -13,7 +13,7 @@ Your notes already carry their status in properties — `publish_status: done`, 
 - **Rule groups** — create any number of rule groups. Each group is a set of `property = value` (exact) or `property contains value` (substring; arrays match by any element) conditions.
 - **AND / OR per group** — choose whether *all* conditions must match (AND) or *any* (OR). One operator per group, kept simple.
 - **Multiple icons** — a file that matches several groups shows several badges, in order.
-- **Built-in brand icons** — bilibili, 小红书 (Xiaohongshu), YouTube, 抖音 (Douyin), 快手 (Kuaishou), 微博 (Weibo), 知乎 (Zhihu), WeChat, X, Instagram.
+- **Built-in brand icons** — bilibili, 小红书 (Xiaohongshu), YouTube, 抖音 (Douyin), 快手 (Kuaishou), 微博 (Weibo), 知乎 (Zhihu), WeChat, X, Reddit, Instagram.
 - **Custom icons** — upload your own image (`jpg` / `jpeg` / `png` / `svg`) and use it as a badge.
 - **Import / export** — save all rule groups, custom icons and the icon size to one JSON file, and import it on another device to use the same setup (desktop only).
 - **Live** — badges update instantly when a note's properties change, and survive file-tree scrolling/expanding.
@@ -51,6 +51,8 @@ This plugin was inspired by [Mark as Read / Explorer Property Attributes](https:
 
 ## Changelog
 
+- v0.2.3 (2026-11-12)
+  - New built-in icon for **Reddit**.
 - v0.2.2 (2026-11-11)
   - **Export / import** at the bottom of the settings tab (desktop only): export writes one JSON file with all rule groups, custom icons and the icon size; import replaces the current settings as a whole, asks for confirmation when rule groups or custom icons already exist, and rejects an invalid file with the reason, changing nothing.
   - **Duplicate** button on each row of the rule group list: the copy is placed right below the original and opens for editing.
