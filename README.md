@@ -13,7 +13,7 @@ Your notes already carry their status in properties — `publish_status: done`, 
 - **Rule groups** — create any number of rule groups. Each group is a set of `property = value` (exact) or `property contains value` (substring; arrays match by any element) conditions.
 - **AND / OR per group** — choose whether *all* conditions must match (AND) or *any* (OR). One operator per group, kept simple.
 - **Multiple icons** — a file that matches several groups shows several badges, in order.
-- **Built-in brand icons** — bilibili, 小红书 (Xiaohongshu), YouTube, 抖音 (Douyin), 快手 (Kuaishou), 微博 (Weibo), 知乎 (Zhihu), WeChat, X, Reddit, Instagram.
+- **Built-in brand icons** — bilibili, 小红书 (Xiaohongshu), YouTube, 抖音 (Douyin), 快手 (Kuaishou), 微博 (Weibo), 知乎 (Zhihu), WeChat, X, Reddit, Quora, Instagram.
 - **Custom icons** — upload your own image (`jpg` / `jpeg` / `png` / `svg`) and use it as a badge.
 - **Import / export** — save all rule groups, custom icons and the icon size to one JSON file, and import it on another device to use the same setup (desktop only).
 - **Live** — badges update instantly when a note's properties change, and survive file-tree scrolling/expanding.
@@ -51,6 +51,8 @@ This plugin was inspired by [Mark as Read / Explorer Property Attributes](https:
 
 ## Changelog
 
+- v0.2.5 (2026-11-18)
+  - New built-in icon for **Quora**.
 - v0.2.4 (2026-11-12)
   - The export file name no longer uses `moment()` for its date, which the community directory code scan flagged; no change in behavior.
 - v0.2.3 (2026-11-12)

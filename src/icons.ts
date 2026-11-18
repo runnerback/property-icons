@@ -1,6 +1,6 @@
 // 内置品牌图标。
 //
-// 11 个平台图标全部使用用户放在 src/icons/platform-ic-sys/ 下的 SVG 源文件
+// 12 个平台图标全部使用用户放在 src/icons/platform-ic-sys/ 下的 SVG 源文件
 // （构建时 esbuild 以 text loader 内联进 bundle，编辑那些 .svg 后重新 build 即生效）。
 // X 是单色标志，源文件用 fill="currentColor" 跟随文字颜色，深色主题下才看得见。
 //
@@ -12,6 +12,7 @@ import instagramSvg from './icons/platform-ic-sys/instagram.svg';
 import kuaishouSvg from './icons/platform-ic-sys/kuaishou.svg';
 import redNoteSvg from './icons/platform-ic-sys/red-note.svg';
 import redditSvg from './icons/platform-ic-sys/reddit.svg';
+import quoraSvg from './icons/platform-ic-sys/quora.svg';
 import weiboSvg from './icons/platform-ic-sys/weibo.svg';
 import wechatSvg from './icons/platform-ic-sys/wechat.svg';
 import xSvg from './icons/platform-ic-sys/X.svg';
@@ -35,6 +36,7 @@ export const BUILTIN_ICONS: BuiltinIcon[] = [
   { id: 'wechat', label: '微信', svg: wechatSvg },
   { id: 'x', label: 'X', svg: xSvg },
   { id: 'reddit', label: 'Reddit', svg: redditSvg },
+  { id: 'quora', label: 'Quora', svg: quoraSvg },
   { id: 'instagram', label: 'Instagram', svg: instagramSvg },
 ];
 
